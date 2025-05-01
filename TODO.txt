@@ -1,0 +1,11 @@
+Replace outerjoin w .join(Site).with_entities()
+JWT Tokens
+README.md - add how to use different databases than sqlite
+gunicorn
+Github Actions
+Docker
+Pylint
+Unit Tests
+Input sanitizing
+Logging w RotatingFileHandler
+Weather API

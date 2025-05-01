@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+    <h1 class="mb-4">Wildlife Survey - Error</h1>
+
+    <div class="container dashboard-container">
+        <div class="d-flex flex-column flex-md-row justify-content-center dashboard-buttons-row">
+              {% if error %}
+                  <p class=error>{{ error }}</p>
+              {% endif %}
+        </div>
+    </div>
+{% endblock %}

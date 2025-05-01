@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaflet Map with Marker Groups</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        #map {
+            width: 100%;
+            height: 500px;
+        }
+        .controls {
+            padding: 10px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #ddd;
+        }
+        button {
+            padding: 6px 12px;
+            margin-right: 8px;
+            margin-bottom: 5px;
+            cursor: pointer;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #f0f0f0;
+        }
+        button.active {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .group-controls {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+        }
+        .legend {
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .legend span {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            margin-right: 5px;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <button id="zoomIn">Zoom In</button>
+        <button id="zoomOut">Zoom Out</button>
+        <button id="resetView">Reset View</button>
+
+        <div class="group-controls">
+            <h3>Marker Groups:</h3>
+            <button id="toggleGroup1" class="active">Landmarks (Red)</button>
+            <button id="toggleGroup2" class="active">Parks (Green)</button>
+            <button id="toggleGroup3" class="active">Museums (Blue)</button>
+            <button id="toggleAll" class="active">Show/Hide All</button>
+        </div>
+
+        <div class="legend">
+            <p><span style="background-color: #f03"></span> Landmarks</p>
+            <p><span style="background-color: #3f3"></span> Parks</p>
+            <p><span style="background-color: #39f"></span> Museums</p>
+        </div>
+    </div>
+    <div id="map"></div>
+
+    <!-- Leaflet JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+
+    <script>
+        // Initialize the map
+        const map = L.map('map').setView([51.505, -0.09], 13);
+        const initialView = {
+            center: [51.505, -0.09],
+            zoom: 13
+        };
+
+        // Add OpenStreetMap tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Create marker groups
+        const landmarkGroup = L.layerGroup().addTo(map);
+        const parkGroup = L.layerGroup().addTo(map);
+        const museumGroup = L.layerGroup().addTo(map);
+
+        // Custom marker icons
+        function createIcon(color) {
+            return L.divIcon({
+                className: 'custom-marker',
+                html: `<svg width="24" height="36" viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
+                        <path fill="${color}" d="M12 0C5.4 0 0 5.4 0 12c0 7.2 12 24 12 24s12-16.8 12-24c0-6.6-5.4-12-12-12z"/>
+                        <circle fill="white" cx="12" cy="12" r="5"/>
+                      </svg>`,
+                iconSize: [24, 36],
+                iconAnchor: [12, 36],
+                popupAnchor: [0, -36]
+            });
+        }
+
+        // Add landmarks (red markers)
+        const landmarkData = [
+            { name: "Big Ben", lat: 51.5007, lng: -0.1246 },
+            { name: "Tower Bridge", lat: 51.5055, lng: -0.0754 },
+            { name: "Buckingham Palace", lat: 51.5014, lng: -0.1419 }
+        ];
+
+        landmarkData.forEach(landmark => {
+            L.marker([landmark.lat, landmark.lng], { icon: createIcon('#f03') })
+                .bindPopup(`<b>${landmark.name}</b><br>Landmark`)
+                .addTo(landmarkGroup);
+        });
+
+        // Add parks (green markers)
+        const parkData = [
+            { name: "Hyde Park", lat: 51.5073, lng: -0.1657 },
+            { name: "Regent's Park", lat: 51.5313, lng: -0.1570 },
+            { name: "Green Park", lat: 51.5046, lng: -0.1439 }
+        ];
+
+        parkData.forEach(park => {
+            L.marker([park.lat, park.lng], { icon: createIcon('#3f3') })
+                .bindPopup(`<b>${park.name}</b><br>Park`)
+                .addTo(parkGroup);
+        });
+
+        // Add museums (blue markers)
+        const museumData = [
+            { name: "British Museum", lat: 51.5194, lng: -0.1269 },
+            { name: "Natural History Museum", lat: 51.4966, lng: -0.1764 },
+            { name: "Tate Modern", lat: 51.5076, lng: -0.0994 }
+        ];
+
+        museumData.forEach(museum => {
+            L.marker([museum.lat, museum.lng], { icon: createIcon('#39f') })
+                .bindPopup(`<b>${museum.name}</b><br>Museum`)
+                .addTo(museumGroup);
+        });
+
+        // Control buttons functionality
+        document.getElementById('zoomIn').addEventListener('click', function() {
+            map.zoomIn();
+        });
+
+        document.getElementById('zoomOut').addEventListener('click', function() {
+            map.zoomOut();
+        });
+
+        document.getElementById('resetView').addEventListener('click', function() {
+            map.setView(initialView.center, initialView.zoom);
+        });
+
+        // Group toggle functionality
+        let groupVisibility = {
+            group1: true,
+            group2: true,
+            group3: true
+        };
+
+        function toggleButtonState(buttonId) {
+            const button = document.getElementById(buttonId);
+            if (button.classList.contains('active')) {
+                button.classList.remove('active');
+            } else {
+                button.classList.add('active');
+            }
+        }
+
+        document.getElementById('toggleGroup1').addEventListener('click', function() {
+            if (groupVisibility.group1) {
+                map.removeLayer(landmarkGroup);
+            } else {
+                map.addLayer(landmarkGroup);
+            }
+            groupVisibility.group1 = !groupVisibility.group1;
+            toggleButtonState('toggleGroup1');
+
+            // Update "Show/Hide All" button state
+            updateToggleAllButtonState();
+        });
+
+        document.getElementById('toggleGroup2').addEventListener('click', function() {
+            if (groupVisibility.group2) {
+                map.removeLayer(parkGroup);
+            } else {
+                map.addLayer(parkGroup);
+            }
+            groupVisibility.group2 = !groupVisibility.group2;
+            toggleButtonState('toggleGroup2');
+
+            // Update "Show/Hide All" button state
+            updateToggleAllButtonState();
+        });
+
+        document.getElementById('toggleGroup3').addEventListener('click', function() {
+            if (groupVisibility.group3) {
+                map.removeLayer(museumGroup);
+            } else {
+                map.addLayer(museumGroup);
+            }
+            groupVisibility.group3 = !groupVisibility.group3;
+            toggleButtonState('toggleGroup3');
+
+            // Update "Show/Hide All" button state
+            updateToggleAllButtonState();
+        });
+
+        function updateToggleAllButtonState() {
+            const allActive = groupVisibility.group1 && groupVisibility.group2 && groupVisibility.group3;
+            const allInactive = !groupVisibility.group1 && !groupVisibility.group2 && !groupVisibility.group3;
+
+            if (allActive) {
+                document.getElementById('toggleAll').classList.add('active');
+            } else if (allInactive) {
+                document.getElementById('toggleAll').classList.remove('active');
+            }
+        }
+
+        document.getElementById('toggleAll').addEventListener('click', function() {
+            // Check if all groups are currently visible
+            const allVisible = groupVisibility.group1 && groupVisibility.group2 && groupVisibility.group3;
+
+            // Toggle all groups
+            if (allVisible) {
+                // Hide all groups
+                map.removeLayer(landmarkGroup);
+                map.removeLayer(parkGroup);
+                map.removeLayer(museumGroup);
+                groupVisibility = { group1: false, group2: false, group3: false };
+
+                // Update buttons
+                document.getElementById('toggleGroup1').classList.remove('active');
+                document.getElementById('toggleGroup2').classList.remove('active');
+                document.getElementById('toggleGroup3').classList.remove('active');
+                document.getElementById('toggleAll').classList.remove('active');
+            } else {
+                // Show all groups
+                map.addLayer(landmarkGroup);
+                map.addLayer(parkGroup);
+                map.addLayer(museumGroup);
+                groupVisibility = { group1: true, group2: true, group3: true };
+
+                // Update buttons
+                document.getElementById('toggleGroup1').classList.add('active');
+                document.getElementById('toggleGroup2').classList.add('active');
+                document.getElementById('toggleGroup3').classList.add('active');
+                document.getElementById('toggleAll').classList.add('active');
+            }
+        });
+    </script>
+</body>
+</html>

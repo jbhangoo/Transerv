@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.username }} Profile{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Profile Header -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 class="mb-0">
+                    <i class="fas fa-user-circle me-2"></i>{{ user.username }}
+                </h3>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <!-- User Info -->
+                <div class="col-md-8">
+                    <div class="table-responsive">
+                        <form method="POST" action="{{ url_for('user.user_edit', user_id=user.id) }}">
+                            {{ form.hidden_tag() }}
+                            <div class="row">
+                                <div class="col-md-6">
+                                    {{ form.role_id.label(class="form-label") }}
+                                    {% if form.role_id.errors %}
+                                    {{ form.role_id(class="form-select is-invalid") }}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.role_id.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% else %}
+                                    {{ form.role_id(class="form-select") }}
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    {{ form.name.label(class="form-label") }}
+                                    {% if form.name.errors %}
+                                    {{ form.name(class="form-control is-invalid") }}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.name.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% else %}
+                                    {{ form.name(class="form-control") }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    {{ form.is_active.label(class="form-check-label") }}
+                                    {% if form.is_active.errors %}
+                                    {{ form.is_active(class="form-check-input is-invalid") }}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.is_active.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% else %}
+                                    {{ form.is_active(class="form-check-input") }}
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    {{ form.status.label(class="form-label") }}
+                                    {% if form.status.errors %}
+                                    {{ form.status(class="form-control is-invalid") }}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.status.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% else %}
+                                    {{ form.status(class="form-control") }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    {{ form.password.label(class="form-label") }}
+                                    {% if form.password.errors %}
+                                    {{ form.password(class="form-control is-invalid") }}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.password.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% else %}
+                                    {{ form.password(class="form-control", placeholder="Leave blank to keep the same password") }}
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    {{ form.confirm.label(class="form-label") }}
+                                    {% if form.confirm.errors %}
+                                    {{ form.confirm(class="form-control is-invalid") }}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.confirm.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% else %}
+                                    {{ form.confirm(class="form-control", placeholder="Leave blank to keep the same password") }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <button type="submit" class="btn btn-primary">Save</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- User Stats -->
+                <div class="col-md-4">
+                    <div class="card border-0">
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <h4 class="text-primary">{{ user_surveys|length }}</h4>
+                                    <p class="small text-muted mb-0">Surveys</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Surveys -->
+    <div class="card">
+        <div class="card-header bg-light d-flex justify-content-between">
+            <h4 class="mb-0">
+                <i class="fas fa-binoculars me-2"></i>Recent Surveys
+            </h4>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Site</th>
+                            <th>Date</th>
+                            <th>Observers</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for survey in recent_surveys %}
+                        <tr>
+                            <td>{{ survey.site.name }}</td>
+                            <td>{{ survey.survey_date.strftime('%Y-%m-%d') }}</td>
+                            <td>{{ survey.observer_count }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+
+<!-- Tooltip Initialization -->
+<script>
+$(function () {
+    $('[data-bs-toggle="tooltip"]').tooltip({
+        trigger: 'hover',
+        html: true
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Main{% endblock %}
+{% block content %}
+    <h1 class="mb-4">Wildlife Survey</h1>
+
+    <div class="container dashboard-container">
+        <div class="d-flex flex-column flex-md-row justify-content-center dashboard-buttons-row">
+            <a href="{{ url_for('report.survey_report') }}" class="btn btn-secondary btn-lg dashboard-button" role="button">Survey Reports</a>
+            <a href="{{ url_for('report.species_report') }}" class="btn btn-secondary btn-lg dashboard-button" role="button">Species Reports</a>
+            <a href="{{ url_for('report.location_report') }}" class="btn btn-secondary btn-lg dashboard-button" role="button">Location Reports</a>
+        </div>
+        <div class="d-flex flex-column flex-md-row justify-content-center dashboard-buttons-row">
+            <a href="{{ url_for('project.project_index') }}" class="btn btn-primary btn-lg dashboard-button" role="button">Species Projects</a>
+            <a href="{{ url_for('user.user_list') }}" class="btn btn-success btn-lg dashboard-button" role="button">User Management</a>
+            <a href="{{ url_for('entry.survey_add') }}" class="btn btn-primary btn-lg dashboard-button" role="button">Site Surveys</a>
+        </div>
+    </div>
+{% endblock %}
+

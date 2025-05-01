@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% block title %}Project Sites{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0"><i class="fas fa-globe me-2"></i>Project Sites</h4>
+        </div>
+        <div class="card-body">
+        <div class="row mb-4">
+            <div class="table-responsive col-md-12">
+                <table id="projectsite-table" class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Project</th>
+                            <th>Site</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- ProjectSite entries will be dynamically inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="row mb-4">
+            <div id="status" class="col-md-12">
+            </div>
+        </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <i class="fas fa-plus-circle me-1"></i>Add Sites to Project
+        </div>
+        <div class="card-body">
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <form id="add-projectsite-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <label> Project
+                        <select name="project_id" required>
+                            <option value="">Choose</option>
+                            {% for project in projects %}
+                            <option value="{{ project.id }}">{{ project.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <label> Site
+                        <select name="site_id" required>
+                            <option value="">Choose</option>
+                            {% for site in sites %}
+                            <option value="{{ site.id }}">{{ site.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <button class="btn btn-primary me-2" type="submit">Add Site to Project</button>
+                </form>
+            </div>
+        </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        fetchProjects();
+    });
+
+    // Fetch and display projectsites
+    function fetchProjects() {
+        fetch("/projectsites/list")
+            .then(response => response.json())
+            .then(data => {
+                const table = document.getElementById('projectsite-table');
+
+                data.projectsites.forEach(projectsite => {
+                    let tablebody = '';
+                    data.projectsites.forEach(projectsite => {
+                        tablebody += `<tr>
+                        <td>${projectsite.id}</td>
+                        <td>${projectsite.project}</td>
+                        <td>${projectsite.site}</td>
+                        <td>
+                            <button onclick="deleteProject(${projectsite.id})" class="btn btn-outline-danger me-2">Delete</button>
+                            <button onclick="editProject(${projectsite.id})" class="btn btn-outline-success me-2">Edit</button>
+                        </td>
+                    </tr>`;
+                    });
+                    table.tBodies[0].innerHTML = tablebody;
+                });
+            });
+    }
+
+    // Add new project
+    document.getElementById('add-projectsite-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        fetch('/projectsites/add', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response =>  response.json())
+        .then((json) => {
+            fetchProjects();
+            document.getElementById('status').innerHTML = json.message;
+            this.reset();
+        })
+        .catch((error) => {document.getElementById('status').innerHTML = error;});
+    });
+
+    // Edit project
+    function editProject(id) {
+        fetch(`/projectsites/edit/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(() => {
+            fetchProjects();
+        });
+    }
+
+    // Delete project
+    function deleteProject(id) {
+        fetch(`/projectsites/delete/${id}`, {
+            method: 'DELETE'
+        })
+        .then(response => {
+            if (response.ok) {
+                fetchProjects();
+            }
+        });
+    }
+</script>
+{% endblock %}

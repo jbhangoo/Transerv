@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Add Observations to {{ survey.site.name }}</h2>
+<p>Survey Date: {{ survey.survey_date }}</p>
+
+<form method="POST">
+    {{ form.hidden_tag() }}
+    <div class="form-group">{{ form.species() }}</div>
+    <div class="form-group">{{ form.count() }}</div>
+    <div class="form-group">{{ form.behavior() }}</div>
+    <div class="form-group">{{ form.notes() }}</div>
+    {{ form.submit() }}
+</form>
+
+<h3>Existing Observations</h3>
+<table class="table">
+    {% for obs in observations %}
+    <tr>
+        <td>{{ obs.species }}</td>
+        <td>{{ obs.count }}</td>
+        <td>{{ obs.behavior }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<a href="{{ url_for('survey.report') }}" class="btn btn-secondary">
+    Finish Survey
+</a>
+{% endblock %}

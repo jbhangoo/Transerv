@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Observation{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">
+        <i class="fas fa-dove me-2"></i>Observation Entry
+    </h1>
+
+    <div class="card mb-4">
+    <div class="card-header bg-light">
+        <h5 class="mb-0">
+            <i class="fas fa-book-open me-2"></i>Observation
+        </h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" class="row g-3" >
+            {{ form.hidden_tag() }}
+            <div class="col-md-4">
+                {{ form.species_id.label(class="form-label") }}
+                {{ form.species_id(class="form-control", id="species") }}
+                {{ form.count.label(class="form-label") }}
+                {{ form.count(class="form-control timepicker" + (" is-invalid" if form.count.errors else "")) }}
+                {% for error in form.count.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                {% endfor %}
+                {{ form.count_supplemental.label(class="form-label") }}
+                {{ form.count_supplemental(class="form-control text" + (" is-invalid" if form.count_supplemental.errors else "")) }}
+                {% for error in form.count_supplemental.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                {% endfor %}
+            </div>
+            <div class="col-md-4">
+                {{ form.survey_id.label(class="form-label") }}
+                {{ form.survey_id(class="form-control grayedout", id="survey_id", readonly=True) }}
+                {{ form.behavior.label(class="form-label") }}
+                {{ form.behavior(class="form-control", id="behavior") }}
+                {{ form.comments.label(class="form-label") }}
+                {{ form.comments(class="form-control textarea" + (" is-invalid" if form.comments.errors else "")) }}
+                {% for error in form.comments.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary me-2">
+                    <i class="fas fa-pencil me-1"></i> Enter
+                </button>
+                <a href="{{ url_for('entry.observation_edit', observation_id=observation_id) }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-sync-alt me-1"></i> Reset
+                </a>
+            </div>
+        </form>
+        <div class="row g-3">
+            <div class="col-md-4 d-flex align-items-end">
+                <a href="{{ url_for('entry.observation_add', survey_id=survey_id) }}" class="btn btn-outline-success">
+                    <i class="fas fa-pencil me-1"></i> Add Observation
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <h1 class="mb-4">
+            <i class="fas fa-book me-2"></i>Observation Records
+        </h1>
+        <div class="card mb-4" style="overflow-x:auto;">
+            <div class="card-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Species</th>
+                            <th>Count</th>
+                            <th>Supp Count</th>
+                            <th>Comments</th>
+                            <th>Edit</th>
+                            <th>Delete</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for observation,species in observations %}
+                        <tr>
+                            <td>{{ observation.id }}</td>
+                            <td>{{ species.common_name }}</td>
+                            <td>{{ observation.count }}</td>
+                            <td>{{ observation.count_supplemental }}</td>
+                            <td>{{ observation.comments }}</td>
+                            <td>
+                                <a href="{{ url_for('entry.observation_edit', observation_id=observation.id) }}"
+                                   class="btn btn-sm btn-outline-primary me-1">
+                                        <i class="fas fa-edit"></i>
+                                </a>
+                            </td>
+                            <td>
+                                <form method="POST" action="{{ url_for('entry.observation_delete', observation_id=observation.id, survey_id=survey_id) }}"
+                                      class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                                            onclick="return confirm('Delete this observation?')">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<!-- Flatpickr for datetime input -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+{% endblock %}

@@ -1,0 +1,47 @@
+body {
+    padding-top: 3.5rem;
+    background-color: #f8f9fa;
+}
+.navbar-brand {
+    font-weight: 700;
+}
+
+.grayedout {
+    background-color: #dddddd;
+}
+.sidebar {
+    position: fixed;
+    top: 56px;
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+    padding: 20px 0;
+    background-color: #e9ecef;
+}
+.main-content {
+    margin-left: 220px;
+    padding: 20px;
+}
+.flashes {
+    z-index: 1000;
+}
+
+.dashboard-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 80vh; /* Adjust as needed */
+    padding: 20px;
+}
+.dashboard-button {
+    margin: 10px; /* Adds space around buttons */
+    width: 150px; /* Adjust button width as needed */
+}
+
+/* Ensure buttons are centered when in a row */
+.dashboard-buttons-row {
+     /* Use Bootstrap flexbox classes for responsive layout */
+     /* d-flex: enables flexbox */
+     /* flex-column: stacks items vertically by default (on small screens) */
+     /* flex-md-row: arranges items in a row from medium breakpoint and up */
+     /* justify-content-center: centers items horizontally when in a row */
+}

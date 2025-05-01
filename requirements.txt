@@ -1,0 +1,11 @@
+flask==3.0.3 # Dash does not support Flash 3.1
+flask-admin
+flask-login
+flask_sqlalchemy
+flask-wtf
+psycopg2-binary
+python-dateutil
+python-dotenv
+plotly
+pytest
+wtforms
