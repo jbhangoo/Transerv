@@ -1,10 +1,8 @@
-# WTForms with dynamic location selection
 from flask_wtf import FlaskForm
 from wtforms import SelectField, DateField, TimeField, IntegerField, TextAreaField, SubmitField
 from wtforms.validators import NumberRange, DataRequired
 
 class SurveyForm(FlaskForm):
-    location = SelectField('Location', coerce=int)
     project = SelectField('Project', coerce=int)
     site = IntegerField('Site', validators=[DataRequired()])
     survey_date = DateField('Survey Date', format='%Y-%m-%d', validators=[DataRequired()])

@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 
-{% block title %}Location Report{% endblock %}
+{% block title %}Site Report{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
     <h1 class="mb-4">
-        <i class="fas fa-tree me-2"></i>Location Report
+        <i class="fas fa-tree me-2"></i>Site Report
     </h1>
 
     <!-- Filters -->
@@ -19,24 +19,32 @@
             <form method="GET" class="row g-3">
                 {{ form.hidden_tag() }}
                 <div class="col-md-4">
-                    <label class="form-label" for="location">Location</label>
-                    <select name="location" id="location"  class="form-select">
-                        <option value="">All Locations</option>
-                        {% for loc in locations %}
-                        <option value="{{ loc.id }}" {% if loc.id == current_location %}selected{% endif %}>
-                            {{ loc.name }}
+                    <label class="form-label" for="project">Project</label>
+                    <select name="project" id="project"  class="form-select">
+                    {% for project in projects %}
+                        <option value="{{ project.id }}"
+                                {% if project.id == current_project %}selected{% endif %}>
+                            {{ project.name }}
                         </option>
-                        {% endfor %}
+                    {% endfor %}
                     </select>
                     <label class="form-label" for="site">Site</label>
-                <label class="form-label" for="site">Site</label>
-                <select name="site" id="site" class="form-select"></select>
+                    <select name="site" id="site"  class="form-select">
+                    {% for site in sites %}
+                        <option value="{{ site.id }}"
+                                data-latitude="{{ site.latitude }}"
+                                data-longitude="{{ site.longitude }}"
+                                {% if site.id == current_site %}selected{% endif %}>
+                            {{ site.name }}
+                        </option>
+                    {% endfor %}
+                    </select>
                 </div>
                 <div class="col-md-4 d-flex align-items-end">
                     <button type="submit" class="btn btn-primary me-2">
                         <i class="fas fa-search me-1"></i> Report
                     </button>
-                    <a href="{{ url_for('report.species_report') }}" class="btn btn-outline-secondary">
+                    <a href="{{ url_for('report.site_report') }}" class="btn btn-outline-secondary">
                         <i class="fas fa-sync-alt me-1"></i> Reset
                     </a>
                 </div>
@@ -49,8 +57,8 @@
         <div class="col-md-4">
             <div class="card text-white bg-success">
                 <div class="card-body">
-                    <h5 class="card-title">Total Locations</h5>
-                    <p class="display-4">{{ total_locations }}</p>
+                    <h5 class="card-title">Total Sites</h5>
+                    <p class="display-4">{{ total_sites }}</p>
                 </div>
             </div>
         </div>
@@ -82,7 +90,7 @@
     <div class="card">
         <div class="card-header bg-light d-flex justify-content-between align-items-center">
             <h5 class="mb-0">
-                <i class="fas fa-table me-2"></i>Location Details
+                <i class="fas fa-table me-2"></i>Site Details
             </h5>
             <a href="{{ url_for('ajax.export_report') }}?sql={{ request.query_string.decode() }}&fmt=csv"
                class="btn btn-sm btn-outline-secondary">
@@ -96,7 +104,7 @@
                         <tr>
                             <th>Species</th>
                             <th>Total Count</th>
-                            <th>Locations</th>
+                            <th>Sites</th>
                             <th>First Seen</th>
                             <th>Last Seen</th>
                         </tr>
@@ -112,8 +120,8 @@
                             </td>
                             <td>{{ species.total_count }}</td>
                             <td>
-                                {% for loc in species.locations %}
-                                <span class="badge bg-secondary me-1">{{ loc }}</span>
+                                {% for site in species.sites %}
+                                <span class="badge bg-secondary me-1">{{ site }}</span>
                                 {% endfor %}
                             </td>
                             <td>{{ species.first_seen }}</td>
@@ -152,7 +160,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Leaflet Map
 var map = L.map('wildmap').setView([0, 0], 2); // Default view
-const locGroup = {};
+const projGroup = {};
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
@@ -164,46 +172,31 @@ const updateMap = (name, desc, curlayer, lat, lng) => {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-  const locationSelect = document.getElementById('location');
+  const projectSelect = document.getElementById('project');
   const siteSelect = document.getElementById('site');
 
-  locationSelect.addEventListener('change', function() {
-    const locationId = locationSelect.value;
-    fetch('/ajax/get_loc_sites/' + locationId)
+  projectSelect.addEventListener('change', function() {
+    const siteID = siteSelect.value;
+    fetch('/ajax/get_proj_sites/' + projectId)
       .then(response => response.json())
       .then(data => {
         let curlayer;
-        for (const lg in locGroup) {
-            locGroup[lg].clearLayers();
+        for (const prj in projGroup) {
+            projGroup[prj].clearLayers();
         }
-        if (locationId in locGroup) {
-            curlayer = locGroup[locationId];
+        if (projectId in projGroup) {
+            curlayer = projGroup[projectId];
             map.addLayer(curlayer);
         } else {
             curlayer = L.featureGroup();
             curlayer.addTo(map);
-            locGroup[locationId] = curlayer;
+            locGroup[projectId] = curlayer;
         }
-        siteSelect.innerHTML = '';
-        siteSelect.appendChild(createOption(0, 'Choose site'));
-        const pts = [];
-        data.forEach(site => {
-          siteSelect.appendChild(createOption(site.id, site.name));
-          site.points.forEach(point => {
-              updateMap(site.name, site.description, curlayer, point.lat, point.lng);
-          })
-        });
+
         map.fitBounds(curlayer.getBounds());
       });
   });
 });
-
-const createOption = (id, name) => {
-    const option = document.createElement('option');
-    option.value = id;
-    option.text = name;
-    return option;
-}
 
 </script>
 {% endblock %}

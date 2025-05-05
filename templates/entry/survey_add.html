@@ -9,7 +9,7 @@
     <div class="card mb-4">
         <div class="card-header bg-light">
             <h5 class="mb-0">
-                <i class="fas fa-book-open me-2"></i>Surveys
+                <i class="fas fa-book-open me-2"></i>Survey
             </h5>
         </div>
         <div class="card-body">
@@ -17,11 +17,8 @@
                 {{ form.hidden_tag() }}
             <div class="row mb-4">
                 <div class="col-md-6">
-                    {{ form.location.label(class="form-label") }}
-                    {{ form.location(class="form-control", id="location") }}
                     {{ form.project.label(class="form-label") }}
                     {{ form.project(class="form-control", id="project") }}
-                    <h6 class="mb-3">Choose EITHER location OR project, then select site</h6>
                     {{ form.site.label(class="form-label") }}
                     <select name="site" id="site" class="form-select"></select>
                 </div>
@@ -54,24 +51,20 @@
                 </div>
             </div>
             <div class="row mb-4">
-                <div class="col-md-4">
+                <div class="col-md-6">
                     {{ form.observer_count.label(class="form-label") }}
-                    <div class="input-group">
-                        {{ form.observer_count(class="form-control text" + (" is-invalid" if form.observer_count.errors else "")) }}
-                    </div>
+                    {{ form.observer_count(class="form-control text" + (" is-invalid" if form.observer_count.errors else "")) }}
                     {% for error in form.observer_count.errors %}
                         <div class="invalid-feedback">{{ error }}</div>
                     {% endfor %}
                     {{ form.comments.label(class="form-label") }}
-                    <div class="input-group">
                         {{ form.comments(class="form-control textarea" + (" is-invalid" if form.comments.errors else "")) }}
-                    </div>
                     {% for error in form.comments.errors %}
                         <div class="invalid-feedback">{{ error }}</div>
                     {% endfor %}
                 </div>
 
-                <div class="col-md-4 d-flex align-items-end">
+                <div class="col-md-6 d-flex align-items-end">
                     <button type="submit" class="btn btn-primary me-2">
                         <i class="fas fa-pencil me-1"></i> Enter
                     </button>
@@ -158,39 +151,44 @@
         });
     });
 
-document.addEventListener('DOMContentLoaded', function() {
-  const locationSelect = document.getElementById('location');
-  const projectSelect = document.getElementById('project');
-  const siteSelect = document.getElementById('site');
+    const projectSelect = document.getElementById('project');
+    const siteSelect = document.getElementById('site');
 
-  locationSelect.addEventListener('change', function() {
-    const locationId = locationSelect.value;
-    fetch('/ajax/get_loc_sites/' + locationId)
-      .then(response => response.json())
-      .then(data => fillSiteSelect(siteSelect, data));
-  });
+    if (projectSelect.value > 0) {
+        const pid = projectSelect.value;
+        fetch('/ajax/get_proj_sites/' + pid)
+          .then(response => response.json())
+          .then(data => fillSiteSelect(siteSelect, data))
+          .then(data=>{
+              const sel = {{ form.site.data }};
+              siteSelect.value =  sel.toString();
+          });
+    }
 
-    projectSelect.addEventListener('change', function() {
-    const projectId = projectSelect.value;
-    fetch('/ajax/get_proj_sites/' + projectId)
-      .then(response => response.json())
-      .then(data => fillSiteSelect(siteSelect, data));
-  });
-});
-
-const fillSiteSelect = (siteSelect, siteData) => {
-        siteSelect.innerHTML = '';
-        siteSelect.appendChild(createOption(0, 'Choose site'));
-        siteData.forEach(site => {
-          siteSelect.appendChild(createOption(site.id, site.name));
+    document.addEventListener('DOMContentLoaded', function() {
+        projectSelect.addEventListener('change', getSitesFromProj);
     });
-  }
 
-const createOption = (id, name) => {
-    const option = document.createElement('option');
-    option.value = id;
-    option.text = name;
-    return option;
-}
+    const getSitesFromProj = () => {
+            const projectId = projectSelect.value;
+            fetch('/ajax/get_proj_sites/' + projectId)
+                .then(response => response.json())
+                .then(data => fillSiteSelect(siteSelect, data));
+    }
+
+    const fillSiteSelect = (siteSelect, siteData) => {
+            siteSelect.innerHTML = '';
+            siteSelect.appendChild(createOption(0, 'Choose site'));
+            siteData.forEach(site => {
+                siteSelect.appendChild(createOption(site.id, site.name));
+            });
+      }
+
+    const createOption = (id, name) => {
+        const option = document.createElement('option');
+        option.value = id;
+        option.text = name;
+        return option;
+    }
 </script>
 {% endblock %}

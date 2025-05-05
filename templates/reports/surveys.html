@@ -19,12 +19,12 @@
             <form method="GET" class="row g-3">
                 {{ form.hidden_tag() }}
                 <div class="col-md-4">
-                    <label class="form-label" for="location">Location</label>
-                    <select name="location" id="location" class="form-select">
-                        <option value="">All Locations</option>
-                        {% for loc in locations %}
-                        <option value="{{ loc.id }}" {% if loc.id == current_location %}selected{% endif %}>
-                            {{ loc.name }}
+                    <label class="form-label" for="project">Project</label>
+                    <select name="project" id="project" class="form-select">
+                        <option value="">Choose Project</option>
+                        {% for proj in projects %}
+                        <option value="{{ proj.id }}" {% if proj.id == current_projecct %}selected{% endif %}>
+                            {{ proj.name }}
                         </option>
                         {% endfor %}
                     </select>
@@ -42,7 +42,7 @@
                     <button type="submit" class="btn btn-primary me-2">
                         <i class="fas fa-search me-1"></i> Report
                     </button>
-                    <a href="{{ url_for('report.species_report') }}" class="btn btn-outline-secondary">
+                    <a href="{{ url_for('report.survey_report') }}" class="btn btn-outline-secondary">
                         <i class="fas fa-sync-alt me-1"></i> Reset
                     </a>
                 </div>
@@ -99,29 +99,18 @@
                     <thead>
                         <tr>
                             <th>Species</th>
+                            <th>Site</th>
+                            <th>Survey Date</th>
                             <th>Total Count</th>
-                            <th>Locations</th>
-                            <th>First Seen</th>
-                            <th>Last Seen</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for species in species_data %}
+                        {% for survey in survey_data %}
                         <tr>
-                            <td>
-                                <strong>{{ species.name }}</strong>
-                                {% if species.is_rare %}
-                                <span class="badge bg-warning ms-2">Rare</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ species.total_count }}</td>
-                            <td>
-                                {% for loc in species.locations %}
-                                <span class="badge bg-secondary me-1">{{ loc }}</span>
-                                {% endfor %}
-                            </td>
-                            <td>{{ species.first_seen }}</td>
-                            <td>{{ species.last_seen }}</td>
+                            <td>{{ survey.species }}</td>
+                            <td>{{ survey.site }}</td>
+                            <td>{{ survey.date }}</td>
+                            <td>{{ survey.total_count }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -153,12 +142,12 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 document.addEventListener('DOMContentLoaded', function() {
-  const locationSelect = document.getElementById('location');
+  const projectSelect = document.getElementById('project');
   const siteSelect = document.getElementById('site');
 
-  locationSelect.addEventListener('change', function() {
-    const locationId = locationSelect.value;
-    fetch('/ajax/get_loc_sites/' + locationId)
+  projectSelect.addEventListener('change', function() {
+    const projId = projectSelect.value;
+    fetch('/ajax/get_proj_sites/' + projId)
       .then(response => response.json())
       .then(data => {
         siteSelect.innerHTML = '';

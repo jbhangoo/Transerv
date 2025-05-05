@@ -1,9 +1,8 @@
-# Models using SQLAlchemy
-from flask_login import UserMixin
-from flask_sqlalchemy import SQLAlchemy
 import datetime
 from enum import Enum
 
+from flask_login import UserMixin
+from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 
 db = SQLAlchemy()
@@ -51,21 +50,6 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         return f'<User {self.username}>'
 
-
-class Location(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), unique=True, nullable=False)
-    description = db.Column(db.String(100), unique=True)
-    sites = db.relationship('Site', backref='location')
-    created_at = db.Column(db.DateTime, default=datetime.datetime.now(datetime.UTC))
-
-    def __init__(self, name, description):
-        self.name = name
-        self.description = description
-
-    def __repr__(self):
-        return f'<Name {self.name}>'
-
 class Project(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), unique=True, nullable=False)
@@ -83,6 +67,21 @@ class Project(db.Model):
     def __repr__(self):
         return f'<Name {self.name}>'
 
+class Site(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    description = db.Column(db.String(100), unique=True)
+    points = db.relationship('Geography', backref='site')
+    surveys = db.relationship('Survey', backref='site')
+    created_at = db.Column(db.DateTime, default=datetime.datetime.now(datetime.UTC))
+
+    def __init__(self, name, description):
+        self.name = name
+        self.description = description
+
+    def __repr__(self):
+        return f'<Name {self.name}>'
+
 class ProjectSite(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey('project.id'))
@@ -92,23 +91,6 @@ class ProjectSite(db.Model):
     def __init__(self, project_id, site_id):
         self.project_id = project_id
         self.site_id = site_id
-
-class Site(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), unique=True, nullable=False)
-    description = db.Column(db.String(100), unique=True)
-    location_id = db.Column(db.Integer, db.ForeignKey('location.id'))
-    points = db.relationship('Geography', backref='site')
-    surveys = db.relationship('Survey', backref='site')
-    created_at = db.Column(db.DateTime, default=datetime.datetime.now(datetime.UTC))
-
-    def __init__(self, loc_name, name, description):
-        self.location_id =  db.select(Location.id).filter_by(name=loc_name)
-        self.name = name
-        self.description = description
-
-    def __repr__(self):
-        return f'<Name {self.name}, Loc id {self.location_id}>'
 
 class Survey(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -166,6 +148,7 @@ class Direction(db.Model):
 
     def __repr__(self):
         return f'<Direction {self.direction_code}>'
+
 class Geography(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     site_id = db.Column(db.Integer, db.ForeignKey('site.id'))
@@ -180,7 +163,9 @@ class Geography(db.Model):
     comments = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.datetime.now(datetime.UTC))
 
-    def __init__(self, site_name, geodetic_system, latitude:float|None, longitude:float|None, northing:float|None, easting:float|None, zone=None, band=None, status:bool=True, comments=None):
+    def __init__(self, site_name, geodetic_system:str, latitude:float|None, longitude:float|None,
+                 northing:float|None, easting:float|None, zone=None, band=None,
+                 status:bool=True, comments=None):
 
         if (latitude and longitude) or (northing and easting):
             self.site_id =  db.select(Site.id).filter_by(name=site_name)
@@ -196,4 +181,6 @@ class Geography(db.Model):
             self.comments = comments
 
     def __repr__(self):
-        return f'<Site {self.site_id} UTM ({self.northing}, {self.easting}) WGS84 ({self.latitude}, {self.longitude})>'
+        return (f'<Site {self.site_id} '
+                f'UTM ({self.northing}, {self.easting}) '
+                f'WGS84 ({self.latitude}, {self.longitude})>')

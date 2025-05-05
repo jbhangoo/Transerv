@@ -1,63 +1,61 @@
-from flask import Blueprint, render_template, request, flash
-from forms.species import SpeciesReportForm
-from forms.location import LocationForm
-from forms.survey import SurveyForm
-from sqlalchemy.orm import joinedload
 import json
+from sqlalchemy.orm import joinedload
+
+from flask import Blueprint, render_template, request, flash
+from forms.site_form import SiteForm
+from forms.project_form import ProjectReportForm
+from forms.survey_form import SurveyForm
 
 from decorators import role_required
-from models.data import db, Site, Location, Species, Observation
+from models.data import db, Project, Site, Species, Observation
 
 """Fix this later"""
 chart_data={'data': [], 'layout': {}}
 report_bp = Blueprint('report', __name__, url_prefix='/reports')
 
 
-@report_bp.route('/species', methods=['GET', 'POST'])
-def species_report():
+@report_bp.route('/project', methods=['GET', 'POST'])
+def project_report():
     print("Request Method:", request.method)
     print("Form Data:", request.form)
 
-    form = SpeciesReportForm()
-    form.location.choices = [(loc.id, loc.name) for loc in Location.query.order_by('name')]
-    form.location.choices.insert(0, (0, 'Choose location'))
-    form.species.choices = [(species.id, species.common_name) for species in Species.query.order_by('common_name')]
-    form.location.choices.insert(0, (0, 'Choose species'))
+    form = ProjectReportForm()
+    form.project.choices = [(project.id, project.name)
+                            for project in Project.query.order_by('name')]
+    form.project.choices.insert(0, (0, 'Choose project'))
 
     if form.validate_on_submit():
-        sp_code = form.species.data  # Get selected species code
-        species = Species.query.filter(Species.id == sp_code).first()  # Get species details
+        project_id = form.project.data  # Get selected species code
 
         # Query observations based on the selected species
-        obs_stmt = db.select(Observation).filter_by(species_id=sp_code)
+        obs_stmt = db.select(Observation).filter_by(project_id=project_id)
         observations = db.session.execute(obs_stmt).scalars().all()
 
         # Process data for chart and table
-        processed_data = process_observations(observations)  # Define this function to format your data
+        processed_data = process_observations(observations)
         chart_json = json.dumps(processed_data)  # Convert processed data to JSON for the chart
 
-        return render_template('reports/species.html',
+        return render_template('reports/project.html',
                                form=form,
-                               current_species=sp_code,
+                               current_project=project_id,
                                observations=observations,
                                species_data=processed_data,
                                chart_data=chart_json,
-                               current_location=request.args.get('location')
+                               current_site=request.args.get('site')
                                )
 
     # If GET request or form not valid, just render the initial page
     for field, errors in form.errors.items():
         for error in errors:
             flash(f"Error in {field}: {error}", "danger")
-    return render_template('reports/species.html',
+    return render_template('reports/project.html',
                            form=form,
-                           current_species=None,
+                           current_project=None,
                            observations=[],
                            species_data="[]",
                            chart_data="[]",
-                           current_location=request.args.get('location')
+                           current_site=request.args.get('site')
                            )
-
 
 def process_observations(observations):
     # Implement your logic to process observations and prepare data for the chart
@@ -71,23 +69,24 @@ def process_observations(observations):
         })
     return data
 
-@report_bp.route('/location')
-def location_report():
-    form = LocationForm()
-    locations = Location.query.all()
-    return render_template('reports/locations.html', form=form, locations=locations, chart_data=chart_data)
+@report_bp.route('/site')
+def site_report():
+    form = SiteForm()
+    sites = Site.query.all()
+    return render_template('reports/sites.html',
+                           form=form, sites=sites, chart_data=chart_data)
 
 
 @report_bp.route('/surveys')
 def survey_report():
     form = SurveyForm()
-    locations = Location.query.all()
+    projects = Project.query.all()
     surveys = Site.query.options(
         joinedload(Site.surveys)
     ).all()
-    return render_template('reports/surveys.html', form=form, locations=locations, surveys=surveys, chart_data=chart_data)
+    return render_template('reports/surveys.html',
+                           form=form, projects=projects, surveys=surveys, chart_data=chart_data)
 
-@report_bp.route('/map')
-def map():
-
+@report_bp.route('/sitemap')
+def sitemap():
     return render_template('reports/map.html')

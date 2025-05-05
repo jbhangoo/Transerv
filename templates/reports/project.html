@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 
-{% block title %}Species Report{% endblock %}
+{% block title %}Project Report{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
     <h1 class="mb-4">
-        <i class="fas fa-dove me-2"></i>Species Report
+        <i class="fas fa-dove me-2"></i>Project Report
     </h1>
 
     <!-- Filters -->
@@ -19,12 +19,8 @@
             <form method="POST" class="row g-3">
                 {{ form.hidden_tag() }}
                 <div class="col-md-4">
-                    <label class="form-label" for="species">Species</label>
-                    {{ form.species(class="form-control", id="species") }}
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label" for="location">Location</label>
-                    {{ form.location(class="form-control", id="location") }}
+                    <label class="form-label" for="project">Project</label>
+                    {{ form.project(class="form-control", id="project") }}
                 </div>
                 <div class="col-md-4">
                     {{ form.date_start.label(class="form-label") }}
@@ -42,7 +38,7 @@
                     <button type="submit" class="btn btn-primary me-2">
                         <i class="fas fa-search me-1"></i> Report
                     </button>
-                    <a href="{{ url_for('report.species_report') }}" class="btn btn-outline-secondary">
+                    <a href="{{ url_for('report.project_report') }}" class="btn btn-outline-secondary">
                         <i class="fas fa-sync-alt me-1"></i> Reset
                     </a>
                 </div>
@@ -55,8 +51,8 @@
         <div class="col-md-4">
             <div class="card text-white bg-success">
                 <div class="card-body">
-                    <h5 class="card-title">Total Species</h5>
-                    <p class="display-4">{{ species|length }}</p>
+                    <h5 class="card-title">Total Surveys</h5>
+                    <p class="display-4">{{ surveys|length }}</p>
                 </div>
             </div>
         </div>
@@ -100,7 +96,7 @@
                         <tr>
                             <th>Species</th>
                             <th>Total Count</th>
-                            <th>Locations</th>
+                            <th>Sites</th>
                             <th>First Seen</th>
                             <th>Last Seen</th>
                         </tr>
@@ -116,7 +112,7 @@
                             </td>
                             <td>{{ species.total_count }}</td>
                             <td>
-                                {% for loc in species.locations %}
+                                {% for loc in species.sites %}
                                 <span class="badge bg-secondary me-1">{{ loc }}</span>
                                 {% endfor %}
                             </td>

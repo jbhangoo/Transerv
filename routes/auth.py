@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, login_required, current_user
 from decorators import role_required
 from models.data import User, Role, db, UserRole
-from forms.user import LoginForm, RegistrationForm
+from forms.user_form import LoginForm, RegistrationForm
 from util.form import form_submit_error_response
 auth_bp = Blueprint('auth', __name__)
 
@@ -22,7 +22,11 @@ def login():
         login_user(user, remember=form.remember.data)
         next_page = request.args.get('next')
         if current_user:
-            print(f"{current_user}\n Name={current_user.get_id()} auth?{current_user.is_authenticated}, active?{current_user.is_active}, Anon?{current_user.is_anonymous}, ")
+            print(f"{current_user}\n "
+                  f"Name={current_user.get_id()} "
+                  f"auth?{current_user.is_authenticated}, "
+                  f"active?{current_user.is_active}, "
+                  f"Anon?{current_user.is_anonymous}, ")
         else:
             print("No current user")
         return redirect(next_page or url_for('index'))

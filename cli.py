@@ -7,7 +7,7 @@ def register_cli_commands(app):
     @app.cli.command("hello")
     def hello():
         """Say hello to NAME."""
-        click.echo(f" You are in the {app.name} context. Database has {db.session.query(User).count()} users.")
+        click.echo(f"context={app.name} . Database has {db.session.query(User).count()} users.")
 
 
     # --- CLI Commands ---

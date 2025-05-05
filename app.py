@@ -1,4 +1,3 @@
-from config import Config
 from datetime import datetime
 import os
 from cli import register_cli_commands
@@ -7,6 +6,7 @@ from flask import Flask, render_template
 from flask_wtf.csrf import CSRFProtect
 from flask_login import LoginManager
 
+from config import Config
 from routes.ajax import ajax_bp
 from routes.auth import auth_bp
 from routes.reports import report_bp
@@ -64,4 +64,6 @@ app.register_blueprint(projectsite_bp)
 app.register_blueprint(user_bp)
 
 if __name__ == '__main__':
-    app.run(host=os.getenv('HOST', '0.0.0.0'), port=os.getenv('PORT', 5000), debug=os.getenv('DEBUG', True))
+    app.run(host=os.getenv('HOST', '0.0.0.0'),
+            port=int(os.getenv('PORT', '5000')),
+            debug=bool(os.getenv('DEBUG', 'True')))

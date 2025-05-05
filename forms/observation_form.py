@@ -16,6 +16,6 @@ class ObservationForm(FlaskForm):
     comments = TextAreaField('Comments')
     submit = SubmitField('Add Observation')
 
-    def validate_count(form, field):
+    def validate_count(self, field):
         if field.data and field.data < 0:
             raise ValidationError('If you enter a count it must be a positive number')

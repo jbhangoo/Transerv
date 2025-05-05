@@ -9,12 +9,19 @@ project_bp = Blueprint('project', __name__, url_prefix='/project')
 @project_bp.route('/', methods=['GET'])
 def project_index():
     species = Species.query.all()
-    return render_template('project/projects.html', current_user=current_user, species=species)
+    return render_template('project/projects.html',
+                           current_user=current_user, species=species)
 @project_bp.route('/list', methods=['GET', 'POST'])
 def project_list():
     # Logic to retrieve all species projects
     projects = Project.query.all()
-    return jsonify({'projects': [{'id': sp.id, 'name': sp.name, 'description': sp.description, 'species_code': sp.species_code} for sp in projects]})
+    return jsonify({'projects':
+                        [{
+                            'id': sp.id,
+                            'name': sp.name,
+                            'description': sp.description,
+                            'species_code': sp.species_code}
+                         for sp in projects]})
 
 # Add a new Project entry
 @project_bp.route('/add', methods=['POST'])
@@ -29,11 +36,11 @@ def project_add():
     return jsonify({'message': f'Project "{name}" added'}), 201
 
 # Edit an existing Project entry
-@project_bp.route('/edit/<int:id>', methods=['PUT'])
-def project_edit(id):
+@project_bp.route('/edit/<int:projectid>', methods=['PUT'])
+def project_edit(projectid):
     data = request.json
     # Logic to find project by id and update it
-    project = Project.query.get(id)
+    project = Project.query.get(projectid)
     if project.name != data['name']:
         project.name = data['name']
     if project.description != data['description']:
@@ -45,9 +52,9 @@ def project_edit(id):
     return jsonify({'message': 'Project updated'})
 
 # Delete a Project entry
-@project_bp.route('/delete/<int:id>', methods=['DELETE'])
-def project_delete(id):
+@project_bp.route('/delete/<int:projectid>', methods=['DELETE'])
+def project_delete(projectid):
     # Logic to find project by id and delete it
-    project = Project.query.get(id)
+    project = Project.query.get(projectid)
     db.session.delete(project)
     return jsonify({'message': f'Project {project.name} deleted'})

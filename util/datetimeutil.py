@@ -1,6 +1,4 @@
 from dateutil.parser import parse
-import pytz
-
 
 def convert_date_string(date_string):
     """

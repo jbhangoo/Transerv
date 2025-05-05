@@ -155,24 +155,50 @@
         });
     });
 
-    document.addEventListener('DOMContentLoaded', function() {
-      const locationSelect = document.getElementById('location');
-      const projectSelect = document.getElementById('project');
-      const siteSelect = document.getElementById('site');
 
-      locationSelect.addEventListener('change', function() {
+    const locationSelect = document.getElementById('location');
+    const projectSelect = document.getElementById('project');
+    const siteSelect = document.getElementById('site');
+
+    if (locationSelect.value > 0) {
         const locationId = locationSelect.value;
         fetch('/ajax/get_loc_sites/' + locationId)
           .then(response => response.json())
-          .then(data => fillSiteSelect(siteSelect, data));
-      });
+          .then(data => fillSiteSelect(siteSelect, data))
+          .then(data=>{
+              const sel = {{ form.site.data }};
+              siteSelect.value =  sel.toString();
+          });
+    }
 
-        projectSelect.addEventListener('change', function() {
-        const projectId = projectSelect.value;
-        fetch('/ajax/get_proj_sites/' + projectId)
+    if (projectSelect.value > 0) {
+        const pid = projectSelect.value;
+        fetch('/ajax/get_proj_sites/' + pid)
           .then(response => response.json())
-          .then(data => fillSiteSelect(siteSelect, data));
-      });
+          .then(data => fillSiteSelect(siteSelect, data))
+          .then(data=>{
+              const sel = {{ form.site.data }};
+              siteSelect.value =  sel.toString();
+          });
+    }
+
+    const getSitesFromLoc = () => {
+        const locationId = locationSelect.value;
+        fetch('/ajax/get_loc_sites/' + locationId)
+            .then(response => response.json())
+            .then(data => fillSiteSelect(siteSelect, data));
+    }
+
+    const getSitesFromProj = () => {
+            const projectId = projectSelect.value;
+            fetch('/ajax/get_proj_sites/' + projectId)
+                .then(response => response.json())
+                .then(data => fillSiteSelect(siteSelect, data));
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        locationSelect.addEventListener('change', getSitesFromLoc);
+        projectSelect.addEventListener('change', getSitesFromProj);
     });
 
     const fillSiteSelect = (siteSelect, siteData) => {

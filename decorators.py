@@ -1,7 +1,8 @@
-from flask import current_app, abort
+from flask import abort
 from flask_login import current_user
 from functools import wraps
 from models.data import db, UserRole, Role
+
 # Security Features
 # Role-based access control middleware
 def role_required(required_level:UserRole):

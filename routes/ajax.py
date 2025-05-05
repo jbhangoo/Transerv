@@ -5,19 +5,23 @@ from models.data import db, Site, ProjectSite, UserRole, Geography
 
 ajax_bp = Blueprint('ajax', __name__, url_prefix='/ajax')
 
-@ajax_bp.route('/get_loc_sites/<int:location_id>')
-def get_loc_sites(location_id):
-    sites = Site.query.filter_by(location_id=location_id).all()
-    data = [{'id': site.id, 'name': site.name, 'description': site.description, 'points': [{'lat':pt.latitude, 'lng':pt.longitude} for pt in site.points]} for site in sites]
-    return jsonify(data)
-
 @ajax_bp.route('/get_proj_sites/<int:project_id>')
 def get_proj_sites(project_id):
-    sites = ProjectSite.query.filter_by(project_id=project_id).join(Site).with_entities(ProjectSite.id, Site.name, Site.description).all()
+    sites = (ProjectSite.query
+             .filter_by(project_id=project_id)
+             .join(Site)
+             .with_entities(ProjectSite.id, Site.name, Site.description)
+             .all())
     data = []
     for site in sites:
-        points = Geography.query.filter_by(site_id=site.id).with_entities(Geography.latitude, Geography.longitude).all()
-        data.append({'id': site.id, 'name': site.name, 'description': site.description, 'points': [{'lat':pt.latitude, 'lng':pt.longitude} for pt in points]})
+        points = (Geography.query
+                  .filter_by(site_id=site.id)
+                  .with_entities(Geography.latitude, Geography.longitude)
+                  .all())
+        data.append({'id': site.id,
+                     'name': site.name,
+                     'description': site.description,
+                     'points': [{'lat':pt.latitude, 'lng':pt.longitude} for pt in points]})
     return jsonify(data)
 
 @ajax_bp.route('/export')
@@ -28,9 +32,11 @@ def export_report(sql, fmt):
         return jsonify({'error': 'Invalid format type. Use "csv" or "json"'}), 400
     return jsonify({'data': db.engine.execute(sql).fetchall()}), 200
 
-@ajax_bp.route('/get_weather/<int:location_id>')
-def get_weather(lat, lon, wdate):
-    OPEN_METEO_URL = f"https://archive-api.open-meteo.com/v1/archive"\
+@ajax_bp.route('/get_weather/<int:site_id>')
+def get_weather(site_id:int):
+    site = Site.query.filter_by(site_id=site_id).first()
+    lat, lon, wdate = site.lat
+    openmeteo_url = f"https://archive-api.open-meteo.com/v1/archive"\
                       f"?latitude={lat}&longitude={lon}&start_date={wdate}&end_date={wdate}"\
                       "&hourly=temperature_2m,weather_code,rain,apparent_temperature,wind_speed_10m,"\
                       "cloud_cover,cloud_cover_low,cloud_cover_mid,surface_pressure,wind_direction_10m"

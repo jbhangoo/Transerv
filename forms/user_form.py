@@ -18,7 +18,8 @@ class RegistrationForm(FlaskForm):
         EqualTo('confirm', message='Passwords must match')
     ])
     confirm = PasswordField('Repeat Password')
-    role_id = SelectField('Role', coerce=int, validators=[DataRequired(), NumberRange(min=1, max=9)])
+    role_id = SelectField('Role', coerce=int,
+                          validators=[DataRequired(), NumberRange(min=1, max=9)])
     email = EmailField('Email', validators=[
         Length(min=5, max=50)
     ])

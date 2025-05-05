@@ -3,7 +3,7 @@ from flask_login import login_required, current_user
 
 from decorators import role_required
 from models.data import db, UserRole, Role, User, Survey
-from forms.user import EditUserForm
+from forms.user_form import EditUserForm
 from util.form import form_submit_error_response
 
 user_bp = Blueprint('user', __name__)
@@ -26,11 +26,16 @@ def user_edit(user_id):
     form.role_id.choices = [(r.id, r.name) for r in Role.query.all()]
 
     current_role = db.session.query(Role).filter(Role.id == current_user.role_id).first()
-    current_user_role = {'id':current_user.id, 'level': current_role.level, 'name': current_role.name}
+    current_user_role = {'id':current_user.id,
+                         'level': current_role.level,
+                         'name': current_role.name}
 
     recent_surveys = Survey.query.filter(Survey.user_id == user.id).order_by(Survey.created_at.desc()).limit(5).all()
 
-    error_response = form_submit_error_response(form, 'user/user_edit.html', current_user_role=current_user_role, user=user, recent_surveys=recent_surveys)
+    error_response = form_submit_error_response(form, 'user/user_edit.html',
+                                                current_user_role=current_user_role,
+                                                user=user,
+                                                recent_surveys=recent_surveys)
     if error_response:
         return error_response
     if form.password.data:
