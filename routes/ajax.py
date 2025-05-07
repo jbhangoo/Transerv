@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify
 from flask_login import login_required
-from decorators import role_required
+from handlers.decorators import role_required
 from models.data import db, Site, ProjectSite, UserRole, Geography
 
 ajax_bp = Blueprint('ajax', __name__, url_prefix='/ajax')

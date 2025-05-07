@@ -2,59 +2,76 @@ from flask import Blueprint, request, jsonify, render_template
 from flask_login import login_required, current_user
 
 from models.data import db, Project, Species
+from  forms.project_form import ProjectForm
+from util.form import form_submit_error_response
 
-project_bp = Blueprint('project', __name__, url_prefix='/project')
+project_bp = Blueprint('project', __name__, url_prefix='/projects')
 
 
 @project_bp.route('/', methods=['GET'])
 def project_index():
-    species = Species.query.all()
-    return render_template('project/projects.html',
-                           current_user=current_user, species=species)
+    species = Species.query.order_by('common_name')
+    return render_template('project/projects.html', species=species)
+
 @project_bp.route('/list', methods=['GET', 'POST'])
 def project_list():
     # Logic to retrieve all species projects
-    projects = Project.query.all()
+    projects = Project.query.order_by('name')
     return jsonify({'projects':
                         [{
-                            'id': sp.id,
-                            'name': sp.name,
-                            'description': sp.description,
-                            'species_code': sp.species_code}
-                         for sp in projects]})
+                            'id': prj.id,
+                            'name': prj.name,
+                            'description': prj.description,
+                            'species_id': prj.species_id}
+                         for prj in projects]})
 
 # Add a new Project entry
 @project_bp.route('/add', methods=['POST'])
 def project_add():
     name = request.form.get('name')
     description = request.form.get('description')
-    species_code = request.form.get('species_code')
-    new_project = Project(name=name, description=description, species_code=species_code)
+    species_id = request.form.get('species_id')
+    new_project = Project(name=name, description=description, species_id=species_id)
     db.session.add(new_project)
     db.session.commit()
     # Logic to save new_project to database
     return jsonify({'message': f'Project "{name}" added'}), 201
 
 # Edit an existing Project entry
-@project_bp.route('/edit/<int:projectid>', methods=['PUT'])
-def project_edit(projectid):
-    data = request.json
-    # Logic to find project by id and update it
-    project = Project.query.get(projectid)
-    if project.name != data['name']:
-        project.name = data['name']
-    if project.description != data['description']:
-        project.description = data['description']
-    if project.species_code != data['species_id']:
-        project.species_code = data['species_id']
+@project_bp.route('/edit/<int:project_id>', methods=['GET', 'POST'])
+def project_edit(project_id):
+    project = Project.query.get(project_id)
+    form = ProjectForm()
+
+    newform = ProjectForm(data=form.data)
+    newform.name.data = project.name
+    newform.description.data = project.description
+    newform.species_id.choices = [(species.id, species.common_name)
+                               for species in Species.query.order_by('common_name')]
+    newform.species_id.choices.insert(0, (0, 'Choose species'))
+    newform.species_id.data = project.species_id
+
+    error_response = form_submit_error_response(newform, 'project/project_edit.html')
+    if error_response:
+        return error_response
+
+    if project.name != form.name.data:
+        project.name = form.name.data
+    if project.description != form.description.data:
+        project.description = form.description.data
+    if project.species_id != form.species_id.data:
+        project.species_id = form.species_id.data
 
     db.session.commit()
-    return jsonify({'message': 'Project updated'})
+    species = Species.query.order_by('common_name')
+    return render_template('project/projects.html', species=species)
+
 
 # Delete a Project entry
-@project_bp.route('/delete/<int:projectid>', methods=['DELETE'])
-def project_delete(projectid):
+@project_bp.route('/delete/<int:project_id>', methods=['GET', 'DELETE'])
+def project_delete(project_id):
     # Logic to find project by id and delete it
-    project = Project.query.get(projectid)
+    project = Project.query.get(project_id)
     db.session.delete(project)
+    db.session.commit()
     return jsonify({'message': f'Project {project.name} deleted'})

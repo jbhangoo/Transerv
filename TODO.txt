@@ -2,10 +2,8 @@ Replace outerjoin w .join(Site).with_entities()
 JWT Tokens
 README.md - add how to use different databases than sqlite
 gunicorn
-Github Actions
+Unit Tests - and Github Actions to run unit tests
 Docker
-Pylint
-Unit Tests
-Input sanitizing
+Teext input sanitizing
 Logging w RotatingFileHandler
 Weather API

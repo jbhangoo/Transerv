@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash
 from flask_login import login_required, current_user
 
-from decorators import role_required
+from handlers.decorators import role_required
 from models.data import db, UserRole, Role, User, Survey
 from forms.user_form import EditUserForm
 from util.form import form_submit_error_response
@@ -30,7 +30,10 @@ def user_edit(user_id):
                          'level': current_role.level,
                          'name': current_role.name}
 
-    recent_surveys = Survey.query.filter(Survey.user_id == user.id).order_by(Survey.created_at.desc()).limit(5).all()
+    recent_surveys = (Survey.query
+                      .filter(Survey.user_id == user.id)
+                      .order_by(Survey.created_at.desc())
+                      .limit(5).all())
 
     error_response = form_submit_error_response(form, 'user/user_edit.html',
                                                 current_user_role=current_user_role,

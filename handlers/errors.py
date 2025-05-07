@@ -1,4 +1,4 @@
-# error_handlers.py
+# errors.py
 from flask import render_template
 
 def register_error_handlers(app):

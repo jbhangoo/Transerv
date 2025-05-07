@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash
 from flask_login import login_required, current_user
 
-from decorators import role_required
+from handlers.decorators import role_required
 from models.data import db, UserRole, Site, Survey, Observation, Species, Project, ProjectSite
 from forms.survey_form import SurveyForm
 from forms.observation_form import ObservationForm
@@ -14,23 +14,25 @@ entry_bp = Blueprint('entry', __name__, url_prefix='/entry')
 @role_required(UserRole.MEMBER)
 def survey_add():
     form = SurveyForm()
-    form.site.choices = [(loc.id, loc.name) for loc in Site.query.order_by('name')]
-    form.site.choices.insert(0, (0, 'Choose site'))
     form.project.choices = [(proj.id, proj.name) for proj in Project.query.order_by('name')]
     form.project.choices.insert(0, (0, 'Choose project'))
+    form.site.choices = [(site.id, site.name) for site in Site.query.order_by('name')]
+    form.site.choices.insert(0, (0, 'Choose site'))
 
     recent_surveys = (Survey.query
                       .filter_by(user_id=current_user.id)
                       .order_by(Survey.survey_date.desc())
                       .limit(5).all())
-    error_response = form_submit_error_response(form, 'entry/survey_add.html', recent_surveys=recent_surveys)
+    error_response = form_submit_error_response(form, 'entry/survey_add.html',
+                                                recent_surveys=recent_surveys)
     if error_response:
         return error_response
 
     # Validate end_date > start_date
     if form.time_end.data <= form.time_start.data:
         flash("End must be after start", "error")
-        return render_template('entry/survey_add.html', form=form, recent_surveys=recent_surveys)
+        return render_template('entry/survey_add.html',
+                               form=form, recent_surveys=recent_surveys)
 
     survey = Survey(
         user_id=current_user.id,

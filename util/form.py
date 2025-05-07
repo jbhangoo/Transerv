@@ -13,9 +13,9 @@ def form_submit_error_response(form, template:str, **template_args):
     """
     if form.validate_on_submit():
         return None
-    else:
-        for field, errors in form.errors.items():
-            for error in errors:
-                flash(f"Error in {field}: {error}", "danger")
-        template_args["form"] = form
-        return render_template(template, **template_args)
+
+    for field, errors in form.errors.items():
+        for error in errors:
+            flash(f"Error in {field}: {error}", "danger")
+    template_args["form"] = form
+    return render_template(template, **template_args)

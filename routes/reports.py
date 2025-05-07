@@ -6,8 +6,7 @@ from forms.site_form import SiteForm
 from forms.project_form import ProjectReportForm
 from forms.survey_form import SurveyForm
 
-from decorators import role_required
-from models.data import db, Project, Site, Species, Observation
+from models.data import db, Project, Site, Observation
 
 """Fix this later"""
 chart_data={'data': [], 'layout': {}}

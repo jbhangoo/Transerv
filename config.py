@@ -8,7 +8,8 @@ SQLALCHEMY_DATABASE_URI_sqlite = ("sqlite:///"
                                                  os.getenv('SQLITE_DB_FILE')))
 SQLALCHEMY_DATABASE_URI_postgres = (f"postgresql://{os.getenv('DB_USER')}:"
                                     f"{os.getenv('DB_PASS')}@{os.getenv('DB_HOST')}:"
-                                    f"{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}?sslmode=require")
+                                    f"{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}"
+                                    f"?sslmode=require")
 
 class Config:
     SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI_sqlite

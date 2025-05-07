@@ -17,7 +17,7 @@
             {{ form.hidden_tag() }}
             <div class="col-md-4">
                 {{ form.species_id.label(class="form-label") }}
-                {{ form.species_id(class="form-control", id="species") }}
+                {{ form.species_id(class="form-control", id="species", readonly=True) }}
                 {{ form.count.label(class="form-label") }}
                 {{ form.count(class="form-control timepicker" + (" is-invalid" if form.count.errors else "")) }}
                 {% for error in form.count.errors %}
@@ -50,62 +50,6 @@
                 </a>
             </div>
         </form>
-        <div class="row g-3">
-            <div class="col-md-4 d-flex align-items-end">
-                <a href="{{ url_for('entry.observation_add', survey_id=survey_id) }}" class="btn btn-outline-success">
-                    <i class="fas fa-pencil me-1"></i> Add Observation
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <div class="mt-4">
-        <h1 class="mb-4">
-            <i class="fas fa-book me-2"></i>Observation Records
-        </h1>
-        <div class="card mb-4" style="overflow-x:auto;">
-            <div class="card-body">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Species</th>
-                            <th>Count</th>
-                            <th>Supp Count</th>
-                            <th>Comments</th>
-                            <th>Edit</th>
-                            <th>Delete</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for observation,species in observations %}
-                        <tr>
-                            <td>{{ observation.id }}</td>
-                            <td>{{ species.common_name }}</td>
-                            <td>{{ observation.count }}</td>
-                            <td>{{ observation.count_supplemental }}</td>
-                            <td>{{ observation.comments }}</td>
-                            <td>
-                                <a href="{{ url_for('entry.observation_edit', observation_id=observation.id) }}"
-                                   class="btn btn-sm btn-outline-primary me-1">
-                                        <i class="fas fa-edit"></i>
-                                </a>
-                            </td>
-                            <td>
-                                <form method="POST" action="{{ url_for('entry.observation_delete', observation_id=observation.id, survey_id=survey_id) }}"
-                                      class="d-inline">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger"
-                                            onclick="return confirm('Delete this observation?')">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
     </div>
 </div>
 {% endblock %}

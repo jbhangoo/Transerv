@@ -1,11 +1,11 @@
-from datetime import datetime
 import os
-from cli import register_cli_commands
-from error_handlers import register_error_handlers
+from handlers.processors import register_request_processors
+from handlers.errors import register_error_handlers
 from flask import Flask, render_template
 from flask_wtf.csrf import CSRFProtect
 from flask_login import LoginManager
 
+from cli import register_cli_commands
 from config import Config
 from routes.ajax import ajax_bp
 from routes.auth import auth_bp
@@ -30,25 +30,14 @@ login_manager.login_message = 'Please log in first.'
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-@app.before_request
-def before_callback():
-    # Runs before each request
-    return None
-
-@app.after_request
-def after_callback(response):
-    # Runs after each request
-    return response
-
-@app.context_processor
-def inject_now():
-    return {'now': datetime.now()}
-
-# Register Command Line Interfaces
-register_cli_commands(app)
+# Register request processors
+register_request_processors(app)
 
 # Register error handlers
 register_error_handlers(app)
+
+# Register Command Line Interfaces
+register_cli_commands(app)
 
 # Register Routes and Blueprints
 @app.route('/')

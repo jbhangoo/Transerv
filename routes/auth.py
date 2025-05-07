@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, login_required, current_user
-from decorators import role_required
+from handlers.decorators import role_required
 from models.data import User, Role, db, UserRole
 from forms.user_form import LoginForm, RegistrationForm
 from util.form import form_submit_error_response

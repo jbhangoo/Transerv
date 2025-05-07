@@ -42,14 +42,15 @@
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <label> Name
                         <input type="text" name="name" placeholder="Project Name" required />
+                    </label>
                     <label> Desc
                         <input type="text" name="description" placeholder="Project Description" required />
                     </label>
                     <label> Species
-                        <select name="species_code" required>
+                        <select name="species_id" required>
                             <option value="">Choose</option>
                             {% for species in species %}
-                            <option value="{{ species.species_code }}">{{ species.common_name }}</option>
+                            <option value="{{ species.id }}">{{ species.common_name }}</option>
                             {% endfor %}
                         </select>
                     </label>
@@ -63,13 +64,51 @@
 {% endblock %}
 {% block scripts %}
 <script>
+    // Adjust this selector based on how you include the CSRF token in your HTML
+    const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+
     document.addEventListener("DOMContentLoaded", function() {
             fetchProjects();
     });
 
+    // Add new project
+    document.getElementById('add-project-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        fetch('/projects/add', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (response.ok) {
+                fetchProjects();
+            }
+            document.getElementById('status').innerHTML = response.statusText;
+        })
+        .catch((error) => {document.getElementById('status').innerHTML = error;});
+    });
+
+    // Delete project
+    function deleteProject(id) {
+
+        fetch(`/projects/delete/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                fetchProjects();
+            }
+            document.getElementById('status').innerHTML = response.statusText;
+        })
+       .catch((error) => {document.getElementById('status').innerHTML = error;});
+    }
+
     // Fetch and display projects
     function fetchProjects() {
-        fetch("/project/list")
+        fetch("/projects/list")
             .then(response => response.json())
             .then(data => {
                 const table = document.getElementById('projects-table');
@@ -81,59 +120,17 @@
                             <td>${project.id}</td>
                         <td>${project.name}</td>
                         <td>${project.description}</td>
-                        <td>${project.species_code}</td>
+                        <td>${project.species_id}</td>
                         <td>
                             <button onclick="deleteProject(${project.id})">Delete</button>
-                            <button onclick="editProject(${project.id})">Edit</button>
+                            <button onclick="window.location.href='/projects/edit/${project.id}'">Edit</button>
                         </td>
                     </tr>`;
                     });
                     table.tBodies[0].innerHTML = tablebody;
                 });
-            });
-    }
-
-    // Add new project
-    document.getElementById('add-project-form').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const formData = new FormData(this);
-        fetch('/project/add', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response =>  response.json())
-        .then((json) => {
-            fetchProjects();
-            document.getElementById('status').innerHTML = json.message;
-            this.reset();
-        })
-        .catch((error) => {document.getElementById('status').innerHTML = error;});
-    });
-
-    // Edit project
-    function editProject(id) {
-        fetch(`/projects/edit/${id}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(() => {
-            fetchProjects();
-        });
-    }
-
-    // Delete project
-    function deleteProject(id) {
-        fetch(`/projects/delete/${id}`, {
-            method: 'DELETE'
-        })
-        .then(response => {
-            if (response.ok) {
-                fetchProjects();
-            }
-        });
+            })
+           .catch((error) => {document.getElementById('status').innerHTML = error;});
     }
 </script>
 {% endblock %}

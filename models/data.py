@@ -54,14 +54,15 @@ class Project(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), unique=True, nullable=False)
     description = db.Column(db.String(100), unique=True)
-    species_code = db.Column(db.Integer, db.ForeignKey('species.species_code'), unique=True, nullable=False)
+    sites = db.relationship('ProjectSite', backref='project')
+    species_id = db.Column(db.Integer, db.ForeignKey('species.id'), nullable=False)
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.datetime.now(datetime.UTC))
 
-    def __init__(self, name, description, species_code):
+    def __init__(self, name, description, species_id):
         self.name = name
         self.description = description
-        self.species_code = species_code
+        self.species_id = species_id
         self.is_active = True
 
     def __repr__(self):
@@ -168,13 +169,13 @@ class Geography(db.Model):
                  status:bool=True, comments=None):
 
         if (latitude and longitude) or (northing and easting):
-            self.site_id =  db.select(Site.id).filter_by(name=site_name)
+            sid = Site.query.filter_by(name=site_name).first()
+            self.site_id = sid
             self.geodetic_system =  geodetic_system
             self.latitude = latitude
             self.longitude = longitude
             self.northing = northing
             self.easting = easting
-            self.northing = northing
             self.zone = zone
             self.band = band
             self.status = status

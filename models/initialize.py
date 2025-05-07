@@ -32,7 +32,7 @@ sample_species = [
 def init_db_tables(app, db):
     with app.app_context():
         if db.session.query(Role).count() > 0:
-            print('FAILED: Database tables already exist.')
+            print('Database already contains roles. Skipping.')
             return
         print('Initializing database tables...')
         for role in UserRole:
@@ -89,9 +89,11 @@ def load_sites(app, db):
     with app.app_context():
         try:
             db.session.add_all(sites_to_add)
-            db.session.add_all(geos_to_add)
             db.session.commit()
             print('Sites loaded successfully.')
+            db.session.add_all(geos_to_add)
+            db.session.commit()
+            print('Coords loaded successfully.')
         except Exception as e:
             db.session.rollback()
             print(f'Error loading data: {str(e)}')
@@ -126,9 +128,10 @@ def load_projects(app, db):
 
     print('Loading Projects...')
     projects_to_add = []
+    species_id = Species.query.filter_by(species_code='CHICK').first().id
     projects_to_add.append(Project(name='Chicken',
                                    description='Countin chickens',
-                                   species_code='CHICK'))
+                                   species_id=species_id))
 
     with app.app_context():
         try:
