@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import SelectField, DateField, TimeField, IntegerField, TextAreaField, SubmitField
-from wtforms.validators import NumberRange, DataRequired
+from wtforms.validators import DataRequired
 
 class SurveyForm(FlaskForm):
     project = SelectField('Project', coerce=int, validators=[DataRequired()])

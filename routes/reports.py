@@ -9,7 +9,7 @@ from forms.survey_form import SurveyForm
 from models.data import db, Project, Site, Observation
 
 """Fix this later"""
-chart_data={'data': [], 'layout': {}}
+chart_data={'files': [], 'layout': {}}
 report_bp = Blueprint('report', __name__, url_prefix='/reports')
 
 
@@ -30,9 +30,9 @@ def project_report():
         obs_stmt = db.select(Observation).filter_by(project_id=project_id)
         observations = db.session.execute(obs_stmt).scalars().all()
 
-        # Process data for chart and table
+        # Process files for chart and table
         processed_data = process_observations(observations)
-        chart_json = json.dumps(processed_data)  # Convert processed data to JSON for the chart
+        chart_json = json.dumps(processed_data)  # Convert processed files to JSON for the chart
 
         return render_template('reports/project.html',
                                form=form,
@@ -57,8 +57,8 @@ def project_report():
                            )
 
 def process_observations(observations):
-    # Implement your logic to process observations and prepare data for the chart
-    # Example: Count occurrences, summarize data, etc.
+    # Implement your logic to process observations and prepare files for the chart
+    # Example: Count occurrences, summarize files, etc.
     data = []
     for obs in observations:
         data.append({

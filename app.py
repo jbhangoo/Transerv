@@ -1,9 +1,12 @@
 import os
-from handlers.processors import register_request_processors
-from handlers.errors import register_error_handlers
+import logging
+from logging.handlers import RotatingFileHandler
 from flask import Flask, render_template
 from flask_wtf.csrf import CSRFProtect
 from flask_login import LoginManager
+
+from handlers.processors import register_request_processors
+from handlers.errors import register_error_handlers
 
 from cli import register_cli_commands
 from config import Config
@@ -17,10 +20,24 @@ from routes.projectsites import projectsite_bp
 from models.data import db, User
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
-app.config.from_object(Config)
-db.init_app(app)
-csrf = CSRFProtect(app)  # Enables CSRF protection for all views
+csrf = CSRFProtect(app)         # Enables CSRF protection for all views
+app.config.from_object(Config)  # Read config from .env
+db.init_app(app)                # Initialize flask_sqlalchemy
 
+# Set up logging
+if not app.debug:  # Only set up logging if not in debug mode
+    logfile_handler = RotatingFileHandler(
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static/files', 'wildlife.log'),
+        maxBytes=10_000, backupCount=3)
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    logfile_handler.setFormatter(formatter)
+    logfile_handler.setLevel(logging.DEBUG)
+    app.logger.addHandler(logfile_handler)
+
+app.logger.setLevel(logging.INFO)  # Set the logging level for the application logger itself
+app.logger.info("Started")
+
+# Use flask_login
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'auth.login'
@@ -41,7 +58,7 @@ register_cli_commands(app)
 
 # Register Routes and Blueprints
 @app.route('/')
-def index():  # put application's code here
+def index():
     return render_template('dashboard.html')
 
 app.register_blueprint(ajax_bp)

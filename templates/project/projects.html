@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}Project Management{% endblock %}
+{% block title %}Projects{% endblock %}
 {% block content %}
 <div class="container mt-4">
     <div class="card">
@@ -38,22 +38,22 @@
         <div class="card-body">
         <div class="row mb-4">
             <div class="col-md-12">
-                <form id="add-project-form">
+                <form id="add-project-form" class="row g-3" >
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <label> Name
-                        <input type="text" name="name" placeholder="Project Name" required />
-                    </label>
-                    <label> Desc
-                        <input type="text" name="description" placeholder="Project Description" required />
-                    </label>
-                    <label> Species
-                        <select name="species_id" required>
-                            <option value="">Choose</option>
-                            {% for species in species %}
-                            <option value="{{ species.id }}">{{ species.common_name }}</option>
-                            {% endfor %}
-                        </select>
-                    </label>
+                    <label for="name" class="form-label">Name</label>
+                    <input type="text" name="name" placeholder="Project Name" required />
+
+                    <label for="description" class="form-label">description</label>
+                    <input type="text" name="description" placeholder="Project Description" required />
+
+                    <label for="species_id" class="form-label"> Species</label>
+                    <select name="species_id" required>
+                        <option value="">Choose</option>
+                        {% for species in species %}
+                        <option value="{{ species.id }}">{{ species.common_name }}</option>
+                        {% endfor %}
+                    </select>
+
                     <button type="submit">Add Project</button>
                 </form>
             </div>
@@ -90,7 +90,6 @@
 
     // Delete project
     function deleteProject(id) {
-
         fetch(`/projects/delete/${id}`, {
             method: 'DELETE',
             headers: {

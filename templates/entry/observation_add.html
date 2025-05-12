@@ -1,9 +1,9 @@
 {% extends "base.html" %}
-{% block title %}Observation{% endblock %}
+{% block title %}Observations{% endblock %}
 {% block content %}
 <div class="container mt-4">
     <h1 class="mb-4">
-        <i class="fas fa-dove me-2"></i>Observation Entry
+        <i class="fas fa-dove me-2"></i>Observations
     </h1>
 
     <div class="card mb-4">
@@ -53,7 +53,7 @@
     </div>
     </div>
         <h1 class="mb-4">
-            <i class="fas fa-book me-2"></i>Observation Records
+            <i class="fas fa-book me-2"></i>Observations
         </h1>
         <div class="card mb-4" style="overflow-x:auto;">
         <div class="card-body">
@@ -70,10 +70,10 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for observation,species in observations %}
+                    {% for observation in observations %}
                     <tr>
                         <td>{{ observation.id }}</td>
-                        <td>{{ species.common_name }}</td>
+                        <td>{{ observation.common_name }}</td>
                         <td>{{ observation.count }}</td>
                         <td>{{ observation.count_supplemental }}</td>
                         <td>{{ observation.comments }}</td>

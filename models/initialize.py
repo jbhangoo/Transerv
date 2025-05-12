@@ -2,10 +2,10 @@ import os
 
 from models.data import User, Role, UserRole, Site, Geography, Species, Direction, Project
 
-# Lookup data
+# Lookup files
 compass_directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
 
-# Sample data if you just want to test the database
+# Sample files if you just want to test the database
 
 sample_sites = [
     {'name': 'Land1', 'description': 'On land'},
@@ -96,13 +96,13 @@ def load_sites(app, db):
             print('Coords loaded successfully.')
         except Exception as e:
             db.session.rollback()
-            print(f'Error loading data: {str(e)}')
+            print(f'Error loading files: {str(e)}')
 
 def load_species(app, db):
 
     species_to_add = []
     if Species.query.first():
-        print('Database already contains species. Skipping data loading.')
+        print('Database already contains species. Skipping files loading.')
         return
 
     print(f'Loading {len(sample_species)} species...')
@@ -115,15 +115,15 @@ def load_species(app, db):
         try:
             db.session.add_all(species_to_add)
             db.session.commit()
-            print('Species data loaded successfully.')
+            print('Species files loaded successfully.')
         except Exception as e:
             db.session.rollback()
-            print(f'Error loading data: {e}')
+            print(f'Error loading files: {e}')
 
 def load_projects(app, db):
 
     if Project.query.first():
-        print('Database already contains projects. Skipping data loading.')
+        print('Database already contains projects. Skipping files loading.')
         return
 
     print('Loading Projects...')
@@ -137,7 +137,7 @@ def load_projects(app, db):
         try:
             db.session.add_all(projects_to_add)
             db.session.commit()
-            print('projects data loaded successfully.')
+            print('projects files loaded successfully.')
         except Exception as e:
             db.session.rollback()
-            print(f'Error loading data: {str(e)}')
+            print(f'Error loading files: {str(e)}')

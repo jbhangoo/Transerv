@@ -34,7 +34,7 @@ def projectsite_add():
     db.session.add(new_projectsite)
     db.session.commit()
 
-    return jsonify({'message': f'ProjectSite added'}), 201
+    return jsonify({'message': 'ProjectSite added'}), 201
 
 # Edit an existing ProjectSite entry
 @projectsite_bp.route('/edit/<int:psid>', methods=['PUT'])

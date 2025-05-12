@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+{% block title %}Survey{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">
+        <i class="fas fa-dove me-2"></i>Surveys
+    </h1>
+    <div class="card">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">
+                <i class="fas fa-book-open me-2"></i>Surveys
+            </h5>
+        </div>
+        <div class="card-body">
+            <form id="add-survey-form" class="row g-3" >
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <label for="project" class="form-label"> Project</label>
+                    <select name="project" id="project" class="form-select d-inline-block" required>
+                        <option value="">Choose</option>
+                        {% for project in projects %}
+                        <option value="{{ project.id }}">{{ project.name }}</option>
+                        {% endfor %}
+                    </select>
+                <br>
+                    <label for="site" class="form-label">Site</label>
+                    <select name="site" id="site" class="form-select d-inline-block"></select>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="survey_date" class="form-label">Survey date</label>
+                    <div class="input-group">
+                        <input type="text" name="survey_date" id="survey_date" class="form-control datepicker">
+                        <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                    </div>
+                    <label for="time_start" class="form-label">Start time</label>
+                    <div class="input-group">
+                        <input type="text" name="time_start" id="time_start" class="form-control timepicker">
+                        <span class="input-group-text"><i class="fas fa-clock"></i></span>
+                    </div>
+                    <label for="time_end" class="form-label">End time</label>
+                    <div class="input-group">
+                        <input type="text" name="time_end" id="time_end" class="form-control timepicker">
+                        <span class="input-group-text"><i class="fas fa-clock"></i></span>
+                    </div>
+                </div>
+            </div>
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <label for="observer_count" class="form-label"> observer_count</label>
+                    <input type="text" name="observer_count" id="Observer count" placeholder="0" />
+                    <label for="comments" class="form-label"> comments</label>
+                    <input type="text" name="comments" id="comments" />
+                </div>
+
+                <div class="col-md-6 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-pencil me-1"></i> Enter
+                    </button>
+                    <a href="{{ url_for('entry.survey_add') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-sync-alt me-1"></i> Reset
+                    </a>
+                </div>
+            </div>
+            <div class="row mb-4">
+                <div id="status" class="col-md-12">
+                </div>
+            </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">
+                <i class="fas fa-book me-2"></i>Recent Surveys
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <table id="surveys-table" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Site</th>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Observers</th>
+                                <th>Comments</th>
+                                <th>Delete</th>
+                                <th>Edit</th>
+                                <th>Add Observations</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Surveys will be dynamically inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<!-- Flatpickr for datetime input -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        flatpickr(".datepicker", {
+            enableTime: false,
+            dateFormat: "Y-m-d",
+            allowInput: true
+        });
+    });
+    document.addEventListener('DOMContentLoaded', function() {
+        flatpickr(".timepicker", {
+            noCalendar: true,
+            enableTime: true,
+            dateFormat: "h:i",
+            defaultDate: "08:00",
+            allowInput: true
+        });
+    });
+
+    // Adjust this selector based on how you include the CSRF token in your HTML
+    const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+
+    document.addEventListener("DOMContentLoaded", function() {
+            fetchSurveys();
+    });
+
+    // Add new survey
+    document.getElementById('add-survey-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        fetch('/survey/add', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (response.ok) {
+                fetchSurveys();
+            }
+            document.getElementById('status').innerHTML = response.statusText;
+        })
+        .catch((error) => {document.getElementById('status').innerHTML = error;});
+    });
+
+    const projectSelect = document.getElementById('project');
+    const siteSelect = document.getElementById('site');
+
+    if (projectSelect.value > 0) {
+        const pid = projectSelect.value;
+        fetch('/ajax/get_proj_sites/' + pid)
+          .then(response => response.json())
+          .then(data => fillSiteSelect(siteSelect, data))
+          .then(data=> {
+              const sel = 0;
+              siteSelect.value =  sel.toString();
+          });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        projectSelect.addEventListener('change', () => {
+            const surveyId = projectSelect.value;
+            fetch('/ajax/get_proj_sites/' + surveyId)
+                .then(response => response.json())
+                .then(data => fillSiteSelect(siteSelect, data));
+        });
+    });
+
+    const fillSiteSelect = (siteSelect, siteData) => {
+            siteSelect.innerHTML = '';
+            siteSelect.appendChild(createOption(0, 'Choose site'));
+            siteData.forEach(site => {
+                siteSelect.appendChild(createOption(site.id, site.name));
+            });
+      }
+
+    const createOption = (id, name) => {
+        const option = document.createElement('option');
+        option.value = id;
+        option.text = name;
+        return option;
+    }
+
+    // Fetch and display surveys
+    function fetchSurveys() {
+        fetch("/entry/survey/list")
+            .then(response => response.json())
+            .then(data => {
+                const table = document.getElementById('surveys-table');
+                let tablebody = '';
+                data.surveys.forEach(survey => {
+                    tablebody += `<tr>
+                        <td>${survey.site}</td>
+                        <td>${survey.survey_date}</td>
+                        <td>${survey.time_start}</td>
+                        <td>${survey.time_end}</td>
+                        <td>${survey.observer_count}</td>
+                        <td>${survey.comments}</td>
+                        <td>
+                            <button onclick="deleteSurvey(${survey.id})">Delete</button>
+                            <button onclick="window.location.href='/entry/survey/edit/${survey.id}'">Edit</button>
+                            <button onclick="window.location.href='/entry/observation_add/${survey.id}'">Add Obs</button>
+                        </td>
+                    </tr>`;
+                });
+                table.tBodies[0].innerHTML = tablebody;
+            })
+           .catch((error) => {document.getElementById('status').innerHTML = error;});
+    }
+</script>
+{% endblock %}

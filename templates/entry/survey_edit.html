@@ -17,12 +17,9 @@
                 {{ form.hidden_tag() }}
             <div class="row mb-4">
                 <div class="col-md-6">
-                    {{ form.location.label(class="form-label") }}
-                    {{ form.location(class="form-control", id="location") }}
                     {{ form.project.label(class="form-label") }}
                     {{ form.project(class="form-control", id="project") }}
-                    <h6 class="mb-3">Choose EITHER location OR project, then select site</h6>
-                    {{ form.site.label(class="form-label") }}
+                    <label for="site" class="form-label">Site</label>
                     <select name="site" id="site" class="form-select"></select>
                 </div>
 
@@ -156,20 +153,8 @@
     });
 
 
-    const locationSelect = document.getElementById('location');
     const projectSelect = document.getElementById('project');
     const siteSelect = document.getElementById('site');
-
-    if (locationSelect.value > 0) {
-        const locationId = locationSelect.value;
-        fetch('/ajax/get_loc_sites/' + locationId)
-          .then(response => response.json())
-          .then(data => fillSiteSelect(siteSelect, data))
-          .then(data=>{
-              const sel = {{ form.site.data }};
-              siteSelect.value =  sel.toString();
-          });
-    }
 
     if (projectSelect.value > 0) {
         const pid = projectSelect.value;
@@ -182,23 +167,13 @@
           });
     }
 
-    const getSitesFromLoc = () => {
-        const locationId = locationSelect.value;
-        fetch('/ajax/get_loc_sites/' + locationId)
-            .then(response => response.json())
-            .then(data => fillSiteSelect(siteSelect, data));
-    }
-
-    const getSitesFromProj = () => {
+    document.addEventListener('DOMContentLoaded', function() {
+        projectSelect.addEventListener('change', () => {
             const projectId = projectSelect.value;
             fetch('/ajax/get_proj_sites/' + projectId)
                 .then(response => response.json())
                 .then(data => fillSiteSelect(siteSelect, data));
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        locationSelect.addEventListener('change', getSitesFromLoc);
-        projectSelect.addEventListener('change', getSitesFromProj);
+        });
     });
 
     const fillSiteSelect = (siteSelect, siteData) => {

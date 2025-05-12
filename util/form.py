@@ -8,7 +8,7 @@ def form_submit_error_response(form, template:str, **template_args):
     'form' will be passed to template. Other kwargs can optionally be passed to template too
     :param form:        The form to validate
     :param template:    The template to render to user
-    :param template_args:      Additional data to pass to template
+    :param template_args:      Additional files to pass to template
     :return: If errors, return error template otherwise None
     """
     if form.validate_on_submit():

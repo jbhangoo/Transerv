@@ -33,7 +33,7 @@ def register_cli_commands(app):
     @app.cli.command("load_db")
     def load_db():
         """
-            Loads the database tables with initial default data.
+            Loads the database tables with initial default files.
             ONLY TO BE DONE ONCE AND FROM THE COMMAND LINE.
             1. Open Terminal (Bash, PowerShell, etc.)
             2. Navigate to this directory

@@ -17,7 +17,7 @@
             {{ form.hidden_tag() }}
             <div class="col-md-4">
                 {{ form.species_id.label(class="form-label") }}
-                {{ form.species_id(class="form-control", id="species", readonly=True) }}
+                {{ form.species_id(class="form-control", id="species", readonly=True, enabled=False) }}
                 {{ form.count.label(class="form-label") }}
                 {{ form.count(class="form-control timepicker" + (" is-invalid" if form.count.errors else "")) }}
                 {% for error in form.count.errors %}
@@ -47,6 +47,9 @@
                 </button>
                 <a href="{{ url_for('entry.observation_edit', observation_id=observation_id) }}" class="btn btn-outline-secondary">
                     <i class="fas fa-sync-alt me-1"></i> Reset
+                </a>
+                <a href="{{ url_for('entry.observation_add',survey_id=survey_id) }}" class="btn btn-success">
+                    <i class="fas fa-sync-alt me-1"></i> Add Obs
                 </a>
             </div>
         </form>

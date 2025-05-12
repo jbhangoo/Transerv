@@ -1,0 +1,2 @@
+# Ensure the port is the same as in Dockerfile and gunicorn.py
+docker run -it --rm -p 8080:8080 hello-flask:1.0.0

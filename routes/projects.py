@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, render_template
 from flask_login import login_required, current_user
 
+from handlers.decorators import role_required, UserRole
 from models.data import db, Project, Species
 from  forms.project_form import ProjectForm
 from util.form import form_submit_error_response
@@ -9,13 +10,15 @@ project_bp = Blueprint('project', __name__, url_prefix='/projects')
 
 
 @project_bp.route('/', methods=['GET'])
+@login_required
+@role_required(UserRole.ADMIN)
 def project_index():
     species = Species.query.order_by('common_name')
     return render_template('project/projects.html', species=species)
 
 @project_bp.route('/list', methods=['GET', 'POST'])
 def project_list():
-    # Logic to retrieve all species projects
+    # Logic to retrieve all projects
     projects = Project.query.order_by('name')
     return jsonify({'projects':
                         [{
@@ -27,6 +30,8 @@ def project_list():
 
 # Add a new Project entry
 @project_bp.route('/add', methods=['POST'])
+@login_required
+@role_required(UserRole.ADMIN)
 def project_add():
     name = request.form.get('name')
     description = request.form.get('description')
@@ -39,6 +44,8 @@ def project_add():
 
 # Edit an existing Project entry
 @project_bp.route('/edit/<int:project_id>', methods=['GET', 'POST'])
+@login_required
+@role_required(UserRole.ADMIN)
 def project_edit(project_id):
     project = Project.query.get(project_id)
     form = ProjectForm()
@@ -69,6 +76,8 @@ def project_edit(project_id):
 
 # Delete a Project entry
 @project_bp.route('/delete/<int:project_id>', methods=['GET', 'DELETE'])
+@login_required
+@role_required(UserRole.ADMIN)
 def project_delete(project_id):
     # Logic to find project by id and delete it
     project = Project.query.get(project_id)
