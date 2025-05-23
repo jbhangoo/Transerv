@@ -6,10 +6,8 @@
         <i class="fas fa-dove me-2"></i>Surveys
     </h1>
     <div class="card">
-        <div class="card-header bg-light">
-            <h5 class="mb-0">
-                <i class="fas fa-book-open me-2"></i>Surveys
-            </h5>
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0"><i class="fas fa-clipboard me-2"></i>Surveys</h4>
         </div>
         <div class="card-body">
             <form id="add-survey-form" class="row g-3" >
@@ -55,7 +53,7 @@
                 </div>
 
                 <div class="col-md-6 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary me-2">
+                    <button type="submit" class="btn btn-success me-2">
                         <i class="fas fa-pencil me-1"></i> Enter
                     </button>
                     <a href="{{ url_for('entry.survey_add') }}" class="btn btn-outline-secondary">
@@ -73,10 +71,8 @@
 </div>
 <div class="container mt-4">
     <div class="card">
-        <div class="card-header bg-light">
-            <h5 class="mb-0">
-                <i class="fas fa-book me-2"></i>Recent Surveys
-            </h5>
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0"><i class="fas fa-book me-2"></i>Recent Surveys</h4>
         </div>
         <div class="card-body">
             <div class="row mb-4">
@@ -206,9 +202,9 @@
                         <td>${survey.observer_count}</td>
                         <td>${survey.comments}</td>
                         <td>
-                            <button onclick="deleteSurvey(${survey.id})">Delete</button>
-                            <button onclick="window.location.href='/entry/survey/edit/${survey.id}'">Edit</button>
-                            <button onclick="window.location.href='/entry/observation_add/${survey.id}'">Add Obs</button>
+                            <button onclick="deleteSurvey(${survey.id})" class="btn btn-outline-danger me-2">Delete</button>
+                            <button onclick="window.location.href='/entry/survey/edit/${survey.id}'" class="btn btn-outline-warning me-2">Edit</button>
+                            <button onclick="window.location.href='/entry/observation_add/${survey.id}'" class="btn btn-outline-secondary">Add Obs</button>
                         </td>
                     </tr>`;
                 });

@@ -32,13 +32,18 @@ def project_list():
     Description: Retrieves a list of all projects.
     """
     # Logic to retrieve all projects
-    projects = Project.query.order_by('name')
+    projects = Project.query.join(Species).with_entities(
+        Project.id,
+        Project.name,
+        Project.description,
+        Species.common_name).order_by('name').all()
+    print(projects)
     return jsonify({'projects':
                         [{
                             'id': prj.id,
                             'name': prj.name,
                             'description': prj.description,
-                            'species_id': prj.species_id}
+                            'species': prj.common_name}
                          for prj in projects]})
 
 # Add a new Project entry
