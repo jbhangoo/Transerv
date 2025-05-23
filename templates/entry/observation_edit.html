@@ -41,7 +41,14 @@
                 {% endfor %}
             </div>
 
-            <div class="col-md-4 d-flex align-items-end">
+            <div class="col-md-4">
+                {{ form.latitude.label(class="form-label") }}
+                {{ form.latitude(class="form-control text" + (" is-invalid" if form.latitude.errors else "")) }}
+                {{ form.longitude.label(class="form-label") }}
+                {{ form.longitude(class="form-control text" + (" is-invalid" if form.longitude.errors else "")) }}
+                {{ form.direction.label(class="form-label") }}
+                {{ form.direction(class="form-control", id="direction") }}
+                <div class="mt-3">
                 <button type="submit" class="btn btn-primary me-2">
                     <i class="fas fa-pencil me-1"></i> Enter
                 </button>
@@ -51,6 +58,7 @@
                 <a href="{{ url_for('entry.observation_add',survey_id=survey_id) }}" class="btn btn-success">
                     <i class="fas fa-sync-alt me-1"></i> Add Obs
                 </a>
+                </div>
             </div>
         </form>
     </div>

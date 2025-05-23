@@ -1,3 +1,8 @@
+"""
+Module Name: data
+Description: This module contains the data models for the application.
+"""
+
 import datetime
 from enum import Enum
 
@@ -8,18 +13,30 @@ from werkzeug.security import generate_password_hash, check_password_hash
 db = SQLAlchemy()
 
 class UserRole(Enum):
+    """
+    Class Name: UserRole
+    Description: Enumeration of user roles.
+    """
     SUPERUSER = 0
     ADMIN = 2
     MEMBER = 5
     GUEST = 9
 
 class Role(db.Model):
+    """
+    Class Name: Role
+    Description: Represents user roles in the application.
+    """
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(20), unique=True, nullable=False)
     level = db.Column(db.Integer, unique=True)
     # Permissions: manage_users, review_data, delete_records, etc.
 
 class User(UserMixin, db.Model):
+    """
+    Class Name: User
+    Description: Represents a user of the application.
+    """
     id = db.Column(db.Integer, primary_key=True)
     role_id = db.Column(db.Integer, db.ForeignKey('role.id'))
     created_at = db.Column(db.DateTime, default=datetime.datetime.now(datetime.UTC))
@@ -51,6 +68,10 @@ class User(UserMixin, db.Model):
         return f'<User {self.username}>'
 
 class Project(db.Model):
+    """
+    Class Name: Project
+    Description: Represents a project in the application.
+    """
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), unique=True, nullable=False)
     description = db.Column(db.String(100), unique=True)
@@ -69,6 +90,10 @@ class Project(db.Model):
         return f'<Name {self.name}>'
 
 class Site(db.Model):
+    """
+    Class Name: Site
+    Description: Represents a site in the application.
+    """
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), unique=True, nullable=False)
     description = db.Column(db.String(100), unique=True)
@@ -84,6 +109,10 @@ class Site(db.Model):
         return f'<Name {self.name}>'
 
 class ProjectSite(db.Model):
+    """
+    Class Name: ProjectSite
+    Description: Represents a project site association.
+    """
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey('project.id'))
     site_id = db.Column(db.Integer, db.ForeignKey('site.id'))
@@ -94,6 +123,10 @@ class ProjectSite(db.Model):
         self.site_id = site_id
 
 class Survey(db.Model):
+    """
+    Class Name: Survey
+    Description: Represents a survey conducted at a site.
+    """
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     project_id = db.Column(db.Integer, db.ForeignKey('project.id'))
@@ -107,6 +140,10 @@ class Survey(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.datetime.now(datetime.UTC))
 
 class Observation(db.Model):
+    """
+    Class Name: Observation
+    Description: Represents an observation made during a survey.
+    """
     id = db.Column(db.Integer, primary_key=True)
     survey_id = db.Column(db.Integer, db.ForeignKey('survey.id'))
     species_id = db.Column(db.Integer, db.ForeignKey('species.id'))
@@ -114,12 +151,16 @@ class Observation(db.Model):
     count_supplemental = db.Column(db.Integer)
     latitude = db.Column(db.Float, nullable=True) # Optional: place where obs was made
     longitude = db.Column(db.Float, nullable=True) # Optional: place where obs was made
-    direction = db.Column(db.String(50))
+    direction = db.Column(db.String(5))
     behavior = db.Column(db.String(50))
     comments = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.datetime.now(datetime.UTC))
 
 class Species(db.Model):
+    """
+    Class Name: Species
+    Description: Represents a species in the database.
+    """
     id = db.Column(db.Integer, primary_key=True)
     species_code = db.Column(db.String(10), unique=True, index=True, nullable=False)
     common_name = db.Column(db.String(100), unique=True, nullable=False)
@@ -140,17 +181,11 @@ class Species(db.Model):
     def __repr__(self):
         return f'<Name {self.common_name} Code {self.species_code}>'
 
-class Direction(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    code = db.Column(db.String(3), unique=True, nullable=False)
-
-    def __init__(self, code):
-        self.code =  code
-
-    def __repr__(self):
-        return f'<Direction {self.direction_code}>'
-
 class Geography(db.Model):
+    """
+    Class Name: Geography
+    Description: Represents geographical data associated with sites.
+    """
     id = db.Column(db.Integer, primary_key=True)
     site_id = db.Column(db.Integer, db.ForeignKey('site.id'))
     geodetic_system = db.Column(db.String(100))
@@ -170,16 +205,26 @@ class Geography(db.Model):
 
         if (latitude and longitude) or (northing and easting):
             sid = Site.query.filter_by(name=site_name).first()
-            self.site_id = sid
-            self.geodetic_system =  geodetic_system
-            self.latitude = latitude
-            self.longitude = longitude
-            self.northing = northing
-            self.easting = easting
-            self.zone = zone
-            self.band = band
-            self.status = status
-            self.comments = comments
+            self.init_geo(sid, band, comments, easting, geodetic_system, latitude, longitude, northing, status, zone)
+
+    def __init__(self, site_id, geodetic_system:str, latitude:float|None, longitude:float|None,
+                 northing:float|None, easting:float|None, zone=None, band=None,
+                 status:bool=True, comments=None):
+
+        if (latitude and longitude) or (northing and easting):
+            self.init_geo(site_id, band, comments, easting, geodetic_system, latitude, longitude, northing, status, zone)
+
+    def init_geo(self, sid, band, comments, easting, geodetic_system, latitude, longitude, northing, status, zone):
+        self.site_id = sid
+        self.geodetic_system = geodetic_system
+        self.latitude = latitude
+        self.longitude = longitude
+        self.northing = northing
+        self.easting = easting
+        self.zone = zone
+        self.band = band
+        self.status = status
+        self.comments = comments
 
     def __repr__(self):
         return (f'<Site {self.site_id} '

@@ -9,4 +9,5 @@ python-dotenv
 plotly
 pylint
 pytest
+requests
 wtforms

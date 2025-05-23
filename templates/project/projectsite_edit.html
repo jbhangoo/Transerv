@@ -1,0 +1,338 @@
+{% extends 'base.html' %}
+{% block title %}Edit Site{% endblock %}
+<style>
+.point-row {
+  margin-bottom: 8px;
+}
+.remove-point {
+  cursor: pointer;
+}
+.required-label::after {
+  content: " *";
+  color: red;
+}
+.points-section {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid #dee2e6;
+  border-radius: 0.375rem;
+  padding: 1rem;
+  background-color: #f8f9fa;
+}
+.site-info-section {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 0.375rem;
+  padding: 1.5rem;
+}
+</style>
+{% block content %}
+<button type="button" id="backButton" class="btn btn-outline-primary btn-sm mb-3">
+  <i class="fas fa-arrow-left"></i> Back to projects
+</button>
+  <div class="container mt-4">
+    <div id="alertContainer" class="mt-3"></div>
+  </div>    <!-- Site Edit Form -->
+    <form id="editSiteForm">
+      <div class="row mb-4">
+        <!-- Left Column - Site Information -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+              <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Edit Site</h4>
+              </div>
+              <div class="card-body">
+                <div class="mb-3">
+                  <label for="siteId" class="form-label">Site ID</label>
+                  <input type="text" class="form-control" id="siteId" readonly>
+                </div>
+
+                <div class="mb-3">
+                  <label for="siteName" class="form-label required-label">Site Name</label>
+                  <input type="text" class="form-control" id="siteName" required>
+                </div>
+
+                <div class="mb-3">
+                  <label for="siteDescription" class="form-label">Site Description</label>
+                  <textarea class="form-control" id="siteDescription" rows="3" placeholder="Enter site description..."></textarea>
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label">Current Points Count</label>
+                  <div class="form-control-plaintext fw-bold" id="pointsCount">0 points</div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-grid gap-2">
+                  <button type="submit" class="btn btn-success btn-lg">Update Site</button>
+                  <button type="button" class="btn btn-outline-danger" onclick="deleteSite()">Delete Site</button>
+                </div>
+              </div>
+            </div>
+        </div>
+
+        <!-- Right Column - Geographic Points -->
+        <div class="col-md-6 align-items-top mb-3">
+          <div class="card points-section">
+              <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Geographic Points</h4>
+              </div>
+              <div class="card-body">
+                <div id="pointsContainer" class="mb-3">
+                  <!-- Points will be added here dynamically -->
+                </div>
+                <button type="button" id="addPointBtn" class="btn btn-outline-primary btn-sm">
+                  + Add Point
+                </button>
+              </div>
+            <div class="text-muted small mt-2">
+              <em>Tip: Leave latitude and longitude empty to remove a point when saving.</em>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+{% endblock %}
+{% block scripts %}
+  <script>
+    let currentSite = {{ site|tojson }};
+
+    // DOM elements
+    const editSiteForm = document.getElementById('editSiteForm');
+    const siteId = document.getElementById('siteId');
+    const siteName = document.getElementById('siteName');
+    const siteDescription = document.getElementById('siteDescription');
+    const pointsContainer = document.getElementById('pointsContainer');
+    const addPointBtn = document.getElementById('addPointBtn');
+    const pointsCount = document.getElementById('pointsCount');
+    const alertContainer = document.getElementById('alertContainer');
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', function() {
+      // Load site data
+      loadSiteData();
+
+      // Add event listeners
+      addPointBtn.addEventListener('click', addPointRow);
+      editSiteForm.addEventListener('submit', handleFormSubmit);
+    });
+
+    // Load site data into form
+    function loadSiteData() {
+      siteId.value = currentSite.id;
+      siteName.value = currentSite.name;
+      siteDescription.value = currentSite.description || '';
+
+      // Clear existing points
+      pointsContainer.innerHTML = '';
+
+      // Load existing points
+      if (currentSite.points && currentSite.points.length > 0) {
+        currentSite.points.forEach((point, index) => {
+          addPointRow(point.latitude, point.longitude);
+        });
+      } else {
+        // Add one empty point row
+        addPointRow();
+      }
+
+      updatePointsCount();
+    }
+
+    // Add a new point input row
+    function addPointRow(lat = '', lng = '') {
+      const pointIndex = document.querySelectorAll('.point-row').length + 1;
+
+      const newRow = document.createElement('div');
+      newRow.className = 'row point-row';
+      newRow.innerHTML = `
+        <div class="col-1 d-flex align-items-center">
+          <small class="text-muted">#${pointIndex}</small>
+        </div>
+        <div class="col-5">
+          <input type="number" class="form-control latitude-input" placeholder="Latitude" step="any" value="${lat}">
+        </div>
+        <div class="col-5">
+          <input type="number" class="form-control longitude-input" placeholder="Longitude" step="any" value="${lng}">
+        </div>
+        <div class="col-1">
+          <button type="button" class="btn btn-outline-danger btn-sm remove-point" title="Remove Point">×</button>
+        </div>
+      `;
+
+      pointsContainer.appendChild(newRow);
+      setupPointRowHandlers(newRow);
+      updatePointsCount();
+    }
+
+    // Setup handlers for a point row
+    function setupPointRowHandlers(row) {
+      const removeBtn = row.querySelector('.remove-point');
+      const latInput = row.querySelector('.latitude-input');
+      const lngInput = row.querySelector('.longitude-input');
+
+      removeBtn.addEventListener('click', function() {
+        row.remove();
+        updatePointNumbers();
+        updatePointsCount();
+      });
+
+      // Update count when values change
+      latInput.addEventListener('input', updatePointsCount);
+      lngInput.addEventListener('input', updatePointsCount);
+    }
+
+    // Update point numbers after removal
+    function updatePointNumbers() {
+      const rows = document.querySelectorAll('.point-row');
+      rows.forEach((row, index) => {
+        const numberElement = row.querySelector('.text-muted');
+        numberElement.textContent = `#${index + 1}`;
+      });
+    }
+
+    // Update points count display
+    function updatePointsCount() {
+      const validPoints = getValidPoints();
+      const totalRows = document.querySelectorAll('.point-row').length;
+      pointsCount.textContent = `${validPoints.length} valid points (${totalRows} total rows)`;
+    }
+
+    // Get valid points (both lat and lng filled)
+    function getValidPoints() {
+      const points = [];
+      document.querySelectorAll('.point-row').forEach(row => {
+        const lat = row.querySelector('.latitude-input').value.trim();
+        const lng = row.querySelector('.longitude-input').value.trim();
+
+        if (lat && lng) {
+          points.push({
+            latitude: parseFloat(lat),
+            longitude: parseFloat(lng)
+          });
+        }
+      });
+      return points;
+    }
+
+    // Handle form submission
+    function handleFormSubmit(e) {
+      e.preventDefault();
+
+      // Validate form
+      if (!siteName.value.trim()) {
+        showAlert('Site name is required.', 'danger');
+        siteName.focus();
+        return;
+      }
+
+      // Get valid points
+      const points = getValidPoints();
+
+      // Update site object
+      currentSite.name = siteName.value.trim();
+      currentSite.description = siteDescription.value.trim();
+      currentSite.points = points;
+
+      // POST to server, adding points list
+      const formData = new FormData();
+      formData.append('name', currentSite.name);
+      formData.append('description', currentSite.description);
+      currentSite.points.forEach(point => {
+        formData.append('points', JSON.stringify(point));
+      });
+
+      fetch(`/projectsites/edit/${currentSite.id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({
+          name: currentSite.name,
+          description: currentSite.description,
+          points: currentSite.points
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        showAlert(`Site "${currentSite.name}" updated successfully: ${data.message}`, 'success');
+      })
+      .catch(error => {
+        showAlert(`Site "${currentSite.name}" FAILED to update! ${error}`, 'error');
+      });
+
+      // Update the points count
+      updatePointsCount();
+    }
+
+    // Delete site function
+    function deleteSite() {
+      const confirmMessage = `Are you sure you want to delete site "${currentSite.name}"?\n\nThis action cannot be undone.`;
+
+      if (confirm(confirmMessage)) {
+        // In a real app, you would send delete request to server
+        console.log('Deleting site:', currentSite.id);
+
+        showAlert(`Site "${currentSite.name}" has been deleted.`, 'danger');
+
+        // In a real app, redirect back to the main page
+        setTimeout(() => {
+          alert('Redirecting back to site list...');
+        }, 2000);
+      }
+    }
+
+
+    // Check for unsaved changes
+    function hasUnsavedChanges() {
+      const currentName = siteName.value.trim();
+      const currentDesc = siteDescription.value.trim();
+      const currentPoints = getValidPoints();
+
+      // Simple comparison - in a real app you might want more sophisticated change detection
+      return (
+        currentName !== currentSite.name ||
+        currentDesc !== (currentSite.description || '') ||
+        JSON.stringify(currentPoints) !== JSON.stringify(currentSite.points)
+      );
+    }
+
+    // Show alert message
+    function showAlert(message, type) {
+      // Clear existing alerts
+      alertContainer.innerHTML = '';
+
+      const alertDiv = document.createElement('div');
+      alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+      alertDiv.role = 'alert';
+      alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      `;
+
+      alertContainer.appendChild(alertDiv);
+
+      // Scroll to alert
+      alertContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+      // Auto dismiss success messages after 5 seconds
+      if (type === 'success') {
+        setTimeout(() => {
+          if (alertDiv.parentNode) {
+            alertDiv.classList.remove('show');
+            setTimeout(() => alertDiv.remove(), 150);
+          }
+        }, 5000);
+      }
+    }
+
+    // Warn about unsaved changes when leaving page
+    window.addEventListener('beforeunload', function(e) {
+      if (hasUnsavedChanges()) {
+        e.preventDefault();
+        e.returnValue = ''; // Required for Chrome
+      }
+    });
+  </script>
+{% endblock %}

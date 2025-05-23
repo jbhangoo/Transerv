@@ -35,19 +35,26 @@
                 {{ form.behavior.label(class="form-label") }}
                 {{ form.behavior(class="form-control", id="behavior") }}
                 {{ form.comments.label(class="form-label") }}
-                {{ form.comments(class="form-control textarea" + (" is-invalid" if form.comments.errors else "")) }}
+                {{ form.comments(class="form-control textarea" + (" is-invalid" if form.comments.errors else ""), id="comments", style="height:50px;") }}
                 {% for error in form.comments.errors %}
                     <div class="invalid-feedback">{{ error }}</div>
                 {% endfor %}
             </div>
-
-            <div class="col-md-4 d-flex align-items-end">
+            <div class="col-md-4">
+                {{ form.latitude.label(class="form-label") }}
+                {{ form.latitude(class="form-control text" + (" is-invalid" if form.latitude.errors else "")) }}
+                {{ form.longitude.label(class="form-label") }}
+                {{ form.longitude(class="form-control text" + (" is-invalid" if form.longitude.errors else "")) }}
+                {{ form.direction.label(class="form-label") }}
+                {{ form.direction(class="form-control", id="direction") }}
+                <div class="mt-3">
                 <button type="submit" class="btn btn-primary me-2">
                     <i class="fas fa-pencil me-1"></i> Enter
                 </button>
                 <a href="{{ url_for('entry.observation_add', survey_id=survey_id) }}" class="btn btn-outline-secondary">
                     <i class="fas fa-sync-alt me-1"></i> Reset
                 </a>
+                </div>
             </div>
         </form>
     </div>
@@ -64,6 +71,9 @@
                         <th>Species</th>
                         <th>Count</th>
                         <th>Supp Count</th>
+                        <th>Latitude</th>
+                        <th>Longitude</th>
+                        <th>Direction</th>
                         <th>Comments</th>
                         <th>Edit</th>
                         <th>Delete</th>
@@ -76,6 +86,9 @@
                         <td>{{ observation.common_name }}</td>
                         <td>{{ observation.count }}</td>
                         <td>{{ observation.count_supplemental }}</td>
+                        <td>{{ observation.latitude }}</td>
+                        <td>{{ observation.longitude }}</td>
+                        <td>{{ observation.direction }}</td>
                         <td>{{ observation.comments }}</td>
                         <td>
                             <a href="{{ url_for('entry.observation_edit', observation_id=observation.id) }}"

@@ -1,3 +1,6 @@
+"""
+User Management routes
+"""
 from flask import Blueprint, render_template, redirect, url_for, flash
 from flask_login import login_required, current_user
 
@@ -13,6 +16,10 @@ user_bp = Blueprint('user', __name__)
 @login_required
 @role_required(UserRole.ADMIN)
 def user_list():
+    """
+    List all users
+    :return:
+    """
     results = db.session.query(User, Role).outerjoin(Role, User.role_id == Role.id).all()
     return render_template('user/user_list.html', current_user=current_user, users=results)
 
@@ -21,6 +28,11 @@ def user_list():
 @login_required
 @role_required(UserRole.ADMIN)
 def user_edit(user_id):
+    """
+    Edit a user entry
+    :param user_id:
+    :return:
+    """
     user = User.query.get_or_404(user_id)
     form = EditUserForm(obj=user)
     form.role_id.choices = [(r.id, r.name) for r in Role.query.all()]
@@ -61,6 +73,11 @@ def user_edit(user_id):
 @login_required
 @role_required(UserRole.SUPERUSER)
 def user_delete(user_id):
+    """
+    Delete a user entry by marking as deleted
+    :param user_id:
+    :return:
+    """
     user = User.query.get_or_404(user_id)
     if user.role.name == 'superuser' and current_user.id != user.id:
         flash('Cannot delete other superusers', 'danger')

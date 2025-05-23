@@ -7,6 +7,18 @@ class ObservationForm(FlaskForm):
     species_id = SelectField('Species', coerce=int, validators=[DataRequired()])
     count = IntegerField('Count', validators=[Optional()])
     count_supplemental = IntegerField('Count Supplemental', validators=[Optional()])
+    latitude = IntegerField('Latitude', validators=[Optional()])
+    longitude = IntegerField('Longitude', validators=[Optional()])
+    direction = SelectField('Direction', choices=[
+        ('', 'Select'),
+        ('N', 'North'),
+        ('NE', 'Northeast'),
+        ('E', 'East'),
+        ('SE', 'Southeast'),
+        ('S', 'South'),
+        ('SW', 'Southwest'),
+        ('W', 'West'),
+        ('NW', 'Northwest')], validators=[Optional()])
     behavior = SelectField('Behavior', choices=[
         ('', 'Select'),
         ('foraging', 'Foraging'),

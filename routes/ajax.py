@@ -1,3 +1,7 @@
+"""
+Module Name: ajax
+Description: This module contains AJAX routes for handling asynchronous requests.
+"""
 import json
 import requests
 
@@ -10,10 +14,15 @@ ajax_bp = Blueprint('ajax', __name__, url_prefix='/ajax')
 
 @ajax_bp.route('/get_proj_sites/<int:project_id>')
 def get_proj_sites(project_id):
+    """
+    Returns a JSON response containing site details and their geographical points.
+    :param project_id:
+    :return:
+    """
     sites = (ProjectSite.query
              .filter_by(project_id=project_id)
              .join(Site)
-             .with_entities(ProjectSite.id, Site.name, Site.description)
+             .with_entities(ProjectSite.id, ProjectSite.site_id, Site.name, Site.description)
              .all())
     data = []
     for site in sites:
@@ -22,6 +31,7 @@ def get_proj_sites(project_id):
                   .with_entities(Geography.latitude, Geography.longitude)
                   .all())
         data.append({'id': site.id,
+                     'site_id': site.site_id,
                      'name': site.name,
                      'description': site.description,
                      'points': [{'lat':pt.latitude, 'lng':pt.longitude} for pt in points]})
@@ -31,12 +41,24 @@ def get_proj_sites(project_id):
 @login_required
 @role_required(UserRole.MEMBER)
 def export_report(sql, fmt):
+    """
+    Description: Exports a report based on the provided SQL query and format.
+    Returns a JSON response containing the exported data.
+    :param sql:
+    :param fmt:
+    :return:
+    """
     if fmt not in ['csv', 'json']:
         return jsonify({'error': 'Invalid format type. Use "csv" or "json"'}), 400
     return jsonify({'files': db.engine.execute(sql).fetchall()}), 200
 
 @ajax_bp.route('/get_weather/<int:site_id>')
 def get_weather(site_id:int):
+    """
+    Get weather
+    :param site_id:
+    :return:
+    """
     site = Site.query.filter_by(site_id=site_id).first()
     lat, lon, wdate = site.lat
     openmeteo_url = f"https://archive-api.open-meteo.com/v1/archive"\
@@ -141,7 +163,7 @@ def get_json_from_url(url):
     except json.JSONDecodeError as e:
         # Handle errors in the JSON decoding process.  This usually means the
         # server returned a response that was not valid JSON.
-        return {"error": f"Error decoding JSON from {url}: {response.text}"}
+        return {"error": f"Error decoding JSON response from {url}: {str(e)}"}
 
     except Exception as e:
         # Handle any other unexpected exceptions.  This is a catch-all for

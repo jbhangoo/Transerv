@@ -1,3 +1,6 @@
+"""
+Auth routes
+"""
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, login_required, current_user
 from handlers.decorators import role_required
@@ -9,6 +12,10 @@ auth_bp = Blueprint('auth', __name__)
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
+    """
+    Validate user login credentials
+    :return:
+    """
     if current_user.is_authenticated:
         next_page = request.args.get('next')
         return redirect(next_page or url_for('index'))
@@ -38,6 +45,10 @@ def login():
 @auth_bp.route('/logout')
 @login_required
 def logout():
+    """
+    Log user out
+    :return:
+    """
     logout_user()
     return redirect(url_for('index'))
 
@@ -46,6 +57,10 @@ def logout():
 @login_required
 @role_required(UserRole.ADMIN)
 def register():
+    """
+    Register a new user
+    :return:
+    """
     form = RegistrationForm()
     form.role_id.choices = [(r.id, r.name) for r in Role.query.all()]
 

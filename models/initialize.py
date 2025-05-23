@@ -1,11 +1,14 @@
+"""
+Module Name: initialize
+Description: This module contains functions that initialize
+the database with basic sample data
+
+"""
 import os
 
-from models.data import User, Role, UserRole, Site, Geography, Species, Direction, Project
+from models.data import User, Role, UserRole, Site, Geography, Species, Project
 
-# Lookup files
-compass_directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
-
-# Sample files if you just want to test the database
+# Sample files if you just content to test the database
 
 sample_sites = [
     {'name': 'Land1', 'description': 'On land'},
@@ -30,6 +33,12 @@ sample_species = [
     {'code': 'REDFOX', 'common_name': 'Red Fox', 'scientific_name': 'Vulpes Vulpes'},
 ]
 def init_db_tables(app, db):
+    """
+
+    :param app:
+    :param db:
+    :return:
+    """
     with app.app_context():
         if db.session.query(Role).count() > 0:
             print('Database already contains roles. Skipping.')
@@ -56,20 +65,13 @@ def init_db_tables(app, db):
         db.session.commit()
         print('Super user loaded successfully.')
 
-def load_lookups(app, db):
-    with app.app_context():
-        if Direction.query.first():
-            print('Lookup FAILED: tables already exist.')
-            return
-        print('Initializing Lookup tables...')
-        directions_to_add = []
-        for direction in compass_directions:
-            directions_to_add.append(Direction(code=direction))
-        db.session.add_all(directions_to_add)
-        db.session.commit()
-        print('Directions loaded successfully.')
 def load_sites(app, db):
+    """
 
+    :param app:
+    :param db:
+    :return:
+    """
     sites_to_add = []
     geos_to_add = []
     if Site.query.first():
@@ -99,7 +101,12 @@ def load_sites(app, db):
             print(f'Error loading files: {str(e)}')
 
 def load_species(app, db):
+    """
 
+    :param app:
+    :param db:
+    :return:
+    """
     species_to_add = []
     if Species.query.first():
         print('Database already contains species. Skipping files loading.')
@@ -121,7 +128,12 @@ def load_species(app, db):
             print(f'Error loading files: {e}')
 
 def load_projects(app, db):
+    """
 
+    :param app:
+    :param db:
+    :return:
+    """
     if Project.query.first():
         print('Database already contains projects. Skipping files loading.')
         return

@@ -1,12 +1,17 @@
 from flask import Blueprint, jsonify, render_template, request
 from flask_login import login_required, current_user
 
-from models.data import db, Project, Site, ProjectSite
+from handlers.decorators import role_required, UserRole
+from models.data import db, Project, Site, ProjectSite, Geography
+from forms.site_form import SiteForm
+from util.form import form_submit_error_response
 
 projectsite_bp = Blueprint('projectsites', __name__, url_prefix='/projectsites')
 
 
 @projectsite_bp.route('/', methods=['GET'])
+@login_required
+@role_required(UserRole.ADMIN)
 def projectsite_index():
     projects = Project.query.all()
     sites = Site.query.all()
@@ -15,6 +20,8 @@ def projectsite_index():
                            projects=projects, sites=sites)
 
 @projectsite_bp.route('/list', methods=['GET', 'POST'])
+@login_required
+@role_required(UserRole.ADMIN)
 def projectsite_list():
     # Logic to retrieve all species projects
     projectsites = ProjectSite.query.join(Project).join(Site).with_entities(
@@ -27,6 +34,8 @@ def projectsite_list():
 
 # Add a new ProjectSite entry
 @projectsite_bp.route('/add', methods=['POST'])
+@login_required
+@role_required(UserRole.ADMIN)
 def projectsite_add():
     project_id = request.form.get('project_id')
     site_id = request.form.get('site_id')
@@ -37,23 +46,62 @@ def projectsite_add():
     return jsonify({'message': 'ProjectSite added'}), 201
 
 # Edit an existing ProjectSite entry
-@projectsite_bp.route('/edit/<int:psid>', methods=['PUT'])
-def projectsite_edit(psid):
-    data = request.json
-    # Logic to find project by id and update it
-    projectsite = ProjectSite.query.get(psid)
-    if projectsite.project_id != data['project_id']:
-        projectsite.project_id = data['project_id']
-    if projectsite.site_id != data['site_id']:
-        projectsite.site_id = data['site_id']
+@projectsite_bp.route('/edit/<int:site_id>', methods=['GET', 'POST'])
+@login_required
+@role_required(UserRole.ADMIN)
+def projectsite_edit(site_id):
+    site = Site.query.get(site_id)
+    site_data = {
+        'id': site.id,
+        'name': site.name,
+        'description': site.description,
+        'points': [{'id': p.id, 'latitude': p.latitude, 'longitude': p.longitude} for p in site.points]
+    }
+    if request.method == 'GET':
+        return render_template('project/projectsite_edit.html',
+                               site=site_data,
+                               current_user=current_user)
+    elif request.method == 'POST':
+        formdata = request.get_json()
+        if ('name' in formdata) and (site.name != formdata['name']):
+            site.name = formdata['name']
+        if ('description' in formdata) and (site.description != formdata['description']):
+            site.description = formdata['description']
+        if ('points' in formdata) and (site.points != formdata['points']):
+            # Clear existing points
+            site.points.clear()
 
-    db.session.commit()
-    return jsonify({'message': 'ProjectSite {projectsite.id} updated'})
+            # Add new points
+            for point in formdata['points']:
+                if 'latitude' in point and 'longitude' in point:
+                    site.points.append(
+                        Geography(
+                            site_id=site.id,
+                            geodetic_system='WGS84',
+                            latitude=float(point['latitude']),
+                            longitude=float(point['longitude']),
+                            northing=None,
+                            easting=None
+                        )
+                    )
+
+        db.session.commit()
+
+        # Return a JSON response
+        return jsonify({
+            'status': 'success',
+            'message': 'Site updated successfully',
+        }), 200
+
+    return "Method not supported", 405 # Should never get here anyway
 
 # Delete a ProjectSite entry
 @projectsite_bp.route('/delete/<int:psid>', methods=['DELETE'])
+@login_required
+@role_required(UserRole.ADMIN)
 def projectsite_delete(psid):
     # Logic to find project by id and delete it
     projectsite = ProjectSite.query.get(psid)
     db.session.delete(projectsite)
+    db.session.commit()
     return jsonify({'message': f'ProjectSite {projectsite.id} deleted'})

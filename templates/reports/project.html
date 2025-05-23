@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 
-{% block title %}Project Report{% endblock %}
+{% block title %}Project Results{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
     <h1 class="mb-4">
-        <i class="fas fa-dove me-2"></i>Project Report
+        <i class="fas fa-dove me-2"></i>Project Results
     </h1>
 
     <!-- Filters -->
@@ -18,53 +18,52 @@
         <div class="card-body">
             <form method="POST" class="row g-3">
                 {{ form.hidden_tag() }}
-                <div class="col-md-4">
-                    <label class="form-label" for="project">Project</label>
-                    {{ form.project(class="form-control", id="project") }}
-                </div>
-                <div class="col-md-4">
-                    {{ form.date_start.label(class="form-label") }}
-                    <div class="input-group">
-                        {{ form.date_start(class="form-control datepicker" + (" is-invalid" if form.date_start.errors else "")) }}
-                        <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                <div class="row">
+                    <div class="col-md-6">
+                        <label class="form-label" for="project">Project</label>
+                        {{ form.project(class="form-control", id="project") }}
+                        {{ form.date_start.label(class="form-label") }}
                     </div>
-                    {{ form.date_end.label(class="form-label") }}
-                    <div class="input-group">
-                        {{ form.date_end(class="form-control datepicker" + (" is-invalid" if form.date_end.errors else "")) }}
-                        <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                    <div class="col-md-6 mb-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="fas fa-search me-1"></i> Report
+                        </button>
+                        <a href="{{ url_for('report.project_report') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-sync-alt me-1"></i> Reset
+                        </a>
                     </div>
                 </div>
-                <div class="col-md-4 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary me-2">
-                        <i class="fas fa-search me-1"></i> Report
-                    </button>
-                    <a href="{{ url_for('report.project_report') }}" class="btn btn-outline-secondary">
-                        <i class="fas fa-sync-alt me-1"></i> Reset
-                    </a>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            {{ form.date_start(class="form-control datepicker" + (" is-invalid" if form.date_start.errors else "")) }}
+                            <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                        </div>
+                        {{ form.date_end.label(class="form-label") }}
+                        <div class="input-group">
+                            {{ form.date_end(class="form-control datepicker" + (" is-invalid" if form.date_end.errors else "")) }}
+                            <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <!-- Summary Cards -->
+                        <div class="card text-white bg-success">
+                            <div class="card-body m-2">
+                                <h5>Total Surveys: {{ surveys|length }}</h5>
+                            </div>
+                        </div>
+                        <div class="card text-white bg-info">
+                            <div class="card-body m-2">
+                                <h5>Total Observations: {{ observations|length }}</h5>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Summary Cards -->
-    <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="card text-white bg-success">
-                <div class="card-body">
-                    <h5 class="card-title">Total Surveys</h5>
-                    <p class="display-4">{{ surveys|length }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card text-white bg-info">
-                <div class="card-body">
-                    <h5 class="card-title">Total Observations</h5>
-                    <p class="display-4">{{ observations|length }}</p>
-                </div>
-            </div>
-        </div>
-    </div>
+
 
     <!-- Interactive Chart -->
     <div class="card mb-4">

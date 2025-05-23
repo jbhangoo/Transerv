@@ -1,5 +1,6 @@
-# form.py
-# Form helpers
+"""
+Form helpers
+"""
 from flask import flash, render_template
 
 def form_submit_error_response(form, template:str, **template_args):

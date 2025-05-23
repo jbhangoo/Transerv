@@ -1,3 +1,7 @@
+"""
+Date and time conversion utilities
+
+"""
 from dateutil.parser import parse
 
 def convert_date_string(date_string):

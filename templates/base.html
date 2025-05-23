@@ -30,23 +30,22 @@
             <div class="collapse navbar-collapse" id="navbarNavDropdown">
                 <ul class="navbar-nav">
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarEntryMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             Data Entry
                         </a>
-                        <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                        <ul class="dropdown-menu" aria-labelledby="navbarEntryMenuLink">
                             <li><a class="dropdown-item" href="{{ url_for('entry.surveys') }}">Surveys</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('projectsites.projectsite_index') }}">Sites</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('project.project_index') }}">Projects</a></li>
                         </ul>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Reports
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarResultsMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Results
                         </a>
-                        <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-                            <li><a class="dropdown-item" href="{{ url_for('report.survey_report') }}">Surveys</a></li>
+                        <ul class="dropdown-menu" aria-labelledby="navbarResultsMenuLink">
                             <li><a class="dropdown-item" href="{{ url_for('report.project_report') }}">Projects</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('report.site_report') }}">Sites</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('report.sites_map') }}">Map</a></li>
                         </ul>
                     </li>
                     {% if current_user.is_authenticated %}

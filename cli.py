@@ -1,6 +1,6 @@
 import click
 from models.data import db, User
-from models.initialize import init_db_tables, load_sites, load_species, load_projects, load_lookups
+from models.initialize import init_db_tables, load_sites, load_species, load_projects
 # commands.py
 
 def register_cli_commands(app):
@@ -41,8 +41,6 @@ def register_cli_commands(app):
                 $ flask load_db
         :return:
         """
-
-        load_lookups(app, db)
         load_sites(app, db)
         load_species(app, db)
         load_projects(app, db)

@@ -8,19 +8,80 @@
         </div>
         <div class="card-body">
         <div class="row mb-4">
-            <div class="table-responsive col-md-12">
+            <div class="table-responsive col-md-6">
+                <label> Project
+                    <select id="project" required>
+                        <option value="">Choose</option>
+                        {% for project in projects %}
+                        <option value="{{ project.id }}">{{ project.name }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
                 <table id="projectsite-table" class="table table-striped">
                     <thead>
                         <tr>
                             <th>ID</th>
                             <th>Project</th>
                             <th>Site</th>
+                            <th>Delete</th>
+                            <th>Edit</th>
                         </tr>
                     </thead>
                     <tbody>
                         <!-- ProjectSite entries will be dynamically inserted here -->
                     </tbody>
                 </table>
+            </div>
+            <div class="col-md-6 d-flex flex-column justify-content-center align-items-center">
+                <!-- Site Entry Form -->
+                <div class="card mb-4">
+                  <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Add New Site</h4>
+                  </div>
+                  <div class="card-body">
+                    <form id="siteForm">
+                        <label for="siteName" class="form-label required-label">Site Name</label>
+                        <input type="text" class="form-control" id="siteName" required>
+                        <label for="siteDescription" class="form-label">Site Description</label>
+                        <input type="text" class="form-control" id="siteDescription">
+
+                      <div class="mb-3">
+                        <label class="form-label">Geographic Points</label>
+                        <div id="pointsContainer">
+                          <!-- Points will be added here dynamically -->
+                          <div class="row point-row">
+                              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <div class="col-md-5">
+                                <label class="form-label">Latitude</label>
+                                <input type="number" id="latitude" class="form-control latitude-input"
+                                       placeholder="Latitude" min="-180" max="180" step="any">
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label">Longitude</label>
+                                <input type="number" id="longitude" class="form-control longitude-input"
+                                       placeholder="Longitude" min="-180" max="180" step="any">
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-outline-danger remove-point">Remove</button>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="mt-2">
+                          <button type="button" id="addPointBtn" class="btn btn-outline-secondary">
+                            <i class="bi bi-plus-circle"></i> Add Another Point
+                          </button>
+                        </div>
+                      </div>
+
+                      <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="reset" class="btn btn-secondary me-md-2">Clear</button>
+                        <button type="submit" class="btn btn-success">Save Site</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+
             </div>
         </div>
         <div class="row mb-4">
@@ -29,111 +90,324 @@
         </div>
         </div>
     </div>
-    <div class="card">
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-            <i class="fas fa-plus-circle me-1"></i>Add Sites to Project
+  <div class="container mt-4">
+
+  </div>
+
+  <!-- Point Details Modal -->
+  <div class="modal fade" id="pointsModal" tabindex="-1" aria-labelledby="pointsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="pointsModalLabel">Geographic Points</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <div class="card-body">
-        <div class="row mb-4">
-            <div class="col-md-12">
-                <form id="add-projectsite-form">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <label> Project
-                        <select name="project_id" required>
-                            <option value="">Choose</option>
-                            {% for project in projects %}
-                            <option value="{{ project.id }}">{{ project.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </label>
-                    <label> Site
-                        <select name="site_id" required>
-                            <option value="">Choose</option>
-                            {% for site in sites %}
-                            <option value="{{ site.id }}">{{ site.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </label>
-                    <button class="btn btn-primary me-2" type="submit">Add Site to Project</button>
-                </form>
-            </div>
+        <div class="modal-body">
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Latitude</th>
+                <th>Longitude</th>
+              </tr>
+            </thead>
+            <tbody id="modalPointsBody">
+              <!-- Points will be added here dynamically -->
+            </tbody>
+          </table>
         </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         </div>
+      </div>
     </div>
+  </div>
+
 </div>
 {% endblock %}
 {% block scripts %}
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
+    // Get project sites
+    document.getElementById('project').addEventListener('change', function(e) {
+        e.preventDefault();
         fetchProjects();
     });
 
-    // Fetch and display projectsites
     function fetchProjects() {
-        fetch("/projectsites/list")
+        const projectId = document.getElementById('project').value;
+        fetch('/ajax/get_proj_sites/' + projectId)
             .then(response => response.json())
-            .then(data => {
-                const table = document.getElementById('projectsite-table');
+            .then(data => fillSiteTable(data))
+            .catch((error) => {document.getElementById('status').innerHTML = error;});
+    }
+    // Fetch and display projectsites
+    function fillSiteTable(tableData) {
+        const table = document.getElementById('projectsite-table');
 
-                data.projectsites.forEach(projectsite => {
-                    let tablebody = '';
-                    data.projectsites.forEach(projectsite => {
-                        tablebody += `<tr>
-                        <td>${projectsite.id}</td>
-                        <td>${projectsite.project}</td>
-                        <td>${projectsite.site}</td>
-                        <td>
-                            <button onclick="deleteProject(${projectsite.id})" class="btn btn-outline-danger me-2">Delete</button>
-                            <button onclick="editProject(${projectsite.id})" class="btn btn-outline-success me-2">Edit</button>
-                        </td>
-                    </tr>`;
-                    });
-                    table.tBodies[0].innerHTML = tablebody;
-                });
-            });
+        let tablebody = '';
+        tableData.forEach(projectsite => {
+            tablebody += `<tr>
+            <td>${projectsite.id}</td>
+            <td>${projectsite.name}</td>
+            <td>${projectsite.description}</td>
+            <td>
+                <button onclick="deleteSite(${projectsite.id})" class="btn btn-outline-danger me-2">Delete</button>
+            </td>
+            <td>
+                <button onclick="editSite(${projectsite.site_id})" class="btn btn-outline-warning me-2">Edit</button>
+            </td>
+        </tr>`;
+        });
+        table.tBodies[0].innerHTML = tablebody;
     }
 
-    // Add new project
-    document.getElementById('add-projectsite-form').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const formData = new FormData(this);
-        fetch('/projectsites/add', {
+
+    function addSite(formElt) {
+        const formData = new FormData(formElt);
+        fetch('/sites/add', {
             method: 'POST',
             body: formData
         })
         .then(response =>  response.json())
         .then((json) => {
-            fetchProjects();
+            addSitetoProject(json.id);
             document.getElementById('status').innerHTML = json.message;
-            this.reset();
+            fetchProjects();
         })
         .catch((error) => {document.getElementById('status').innerHTML = error;});
-    });
+    }
 
-    // Edit project
-    function editProject(id) {
-        fetch(`/projectsites/edit/${id}`, {
+    function addSitetoProject(siteId) {
+        fetch(`/projectsites/add/${siteId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
             }
         })
-        .then(response => response.json())
-        .then(() => {
-            fetchProjects();
-        });
+        .catch((error) => {document.getElementById('status').innerHTML = error;});
     }
 
-    // Delete project
-    function deleteProject(id) {
-        fetch(`/projectsites/delete/${id}`, {
-            method: 'DELETE'
-        })
-        .then(response => {
-            if (response.ok) {
-                fetchProjects();
-            }
-        });
+    // Delete site
+    function deleteSite(id) {
+        if (confirm('Are you sure you want to delete this site?')) {
+            fetch(`/projectsites/delete/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    fetchProjects();
+                } else {
+                    showAlert('Site deleted successfully (response.statusText)', 'danger');
+                }
+            })
+            .catch((error) => {document.getElementById('status').innerHTML = error;});
+        }
     }
+
+    function editSite(id) {
+        window.location.href = `/projectsites/edit/${id}`;
+    }
+
+    // Store sites data
+    let sites = [];
+    let siteIdCounter = 1;
+
+    // DOM elements
+    const siteForm = document.getElementById('siteForm');
+    const siteName = document.getElementById('siteName');
+    const siteDescription = document.getElementById('siteDescription');
+    const pointsContainer = document.getElementById('pointsContainer');
+    const addPointBtn = document.getElementById('addPointBtn');
+    const sitesTableBody = document.getElementById('sitesTableBody');
+
+    // Initialize Bootstrap modal
+    const pointsModal = new bootstrap.Modal(document.getElementById('pointsModal'));
+
+    // Add event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+      // Add point button
+      addPointBtn.addEventListener('click', addPointRow);
+
+      // Form submission
+      siteForm.addEventListener('submit', handleFormSubmit);
+
+      // Initial point row handler
+      setupPointRowHandlers(document.querySelector('.point-row'));
+
+      // Update the table initially
+      updateSitesTable();
+    });
+
+    // Add a new point input row
+    function addPointRow() {
+      const newRow = document.createElement('div');
+      newRow.className = 'row point-row';
+      newRow.innerHTML = `
+        <div class="col-md-5">
+          <input type="number" class="form-control latitude-input" placeholder="Latitude" step="any">
+        </div>
+        <div class="col-md-5">
+          <input type="number" class="form-control longitude-input" placeholder="Longitude" step="any">
+        </div>
+        <div class="col-md-2">
+          <button type="button" class="btn btn-outline-danger remove-point">Remove</button>
+        </div>
+      `;
+
+      pointsContainer.appendChild(newRow);
+      setupPointRowHandlers(newRow);
+    }
+
+    // Setup handlers for a point row
+    function setupPointRowHandlers(row) {
+      const removeBtn = row.querySelector('.remove-point');
+      removeBtn.addEventListener('click', function() {
+        // Don't remove if it's the only row
+        const rows = document.querySelectorAll('.point-row');
+        if (rows.length > 1) {
+          row.remove();
+        } else {
+          // Clear inputs instead of removing the only row
+          row.querySelectorAll('input').forEach(input => input.value = '');
+        }
+      });
+    }
+
+// Handle form submission
+function handleFormSubmit(e) {
+  e.preventDefault();
+
+  // Validate form
+  if (!siteName.value.trim()) {
+    alert('Site name is required.');
+    return;
+  }
+
+  // Collect points data
+  const points = [];
+  document.querySelectorAll('.point-row').forEach(row => {
+    const lat = row.querySelector('.latitude-input').value;
+    const lng = row.querySelector('.longitude-input').value;
+
+    // Only add points that have both lat and lng filled
+    if (lat && lng) {
+      points.push({
+        latitude: parseFloat(lat),
+        longitude: parseFloat(lng)
+      });
+    }
+  });
+
+  // Create new site object
+  const newSite = {
+    id: siteIdCounter++,
+    name: siteName.value.trim(),
+    description: siteDescription.value.trim() || null,
+    points: points
+  };
+
+  // Add to sites array
+  sites.push(newSite);
+
+  // Update the table
+  updateSitesTable();
+
+  // Reset form
+  siteForm.reset();
+
+  // Reset points to a single empty row
+  pointsContainer.innerHTML = '';
+  addPointRow();
+
+  // Show success message
+  showAlert('Site added successfully!', 'success');
+}
+
+// Update sites table
+function updateSitesTable() {
+  if (sites.length === 0) {
+    sitesTableBody.innerHTML = '<tr><td colspan="5" class="text-center">No sites available</td></tr>';
+    return;
+  }
+
+  sitesTableBody.innerHTML = '';
+
+  sites.forEach(site => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${site.id}</td>
+      <td>${escapeHtml(site.name)}</td>
+      <td>${escapeHtml(site.description || '')}</td>
+      <td>${site.points.length}</td>
+      <td>
+        <button class="btn btn-sm btn-primary view-points" data-site-id="${site.id}">View Points</button>
+        <button class="btn btn-sm btn-warning edit-site" data-site-id="${site.id}">Edit</button>
+        <button class="btn btn-sm btn-danger delete-site" data-site-id="${site.id}">Delete</button>
+      </td>
+    `;
+    sitesTableBody.appendChild(row);
+
+    // Add event handlers
+    row.querySelector('.view-points').addEventListener('click', () => viewPoints(site));
+    row.querySelector('.delete-site').addEventListener('click', () => deleteSite(site.id));
+  });
+}
+
+// View points in modal
+function viewPoints(site) {
+  const modalTitle = document.getElementById('pointsModalLabel');
+  const modalBody = document.getElementById('modalPointsBody');
+
+  modalTitle.textContent = `Geographic Points for ${site.name}`;
+
+  if (site.points.length === 0) {
+    modalBody.innerHTML = '<tr><td colspan="3" class="text-center">No points available</td></tr>';
+  } else {
+    modalBody.innerHTML = '';
+    site.points.forEach((point, index) => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${index + 1}</td>
+        <td>${point.latitude}</td>
+        <td>${point.longitude}</td>
+      `;
+      modalBody.appendChild(row);
+    });
+  }
+
+  pointsModal.show();
+}
+
+// Show alert message
+function showAlert(message, type) {
+  const alertDiv = document.createElement('div');
+  alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+  alertDiv.role = 'alert';
+  alertDiv.innerHTML = `
+    ${message}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  `;
+
+  // Insert after the header
+  const container = document.querySelector('.container');
+  container.insertBefore(alertDiv, container.children[1]);
+
+  // Auto dismiss after 3 seconds
+  setTimeout(() => {
+    alertDiv.classList.remove('show');
+    setTimeout(() => alertDiv.remove(), 150);
+  }, 3000);
+}
+
+// Helper function to escape HTML
+function escapeHtml(str) {
+  if (!str) return '';
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
 </script>
 {% endblock %}

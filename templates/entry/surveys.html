@@ -168,8 +168,8 @@
 
     document.addEventListener('DOMContentLoaded', function() {
         projectSelect.addEventListener('change', () => {
-            const surveyId = projectSelect.value;
-            fetch('/ajax/get_proj_sites/' + surveyId)
+            const projId = projectSelect.value;
+            fetch('/ajax/get_proj_sites/' + projId)
                 .then(response => response.json())
                 .then(data => fillSiteSelect(siteSelect, data));
         });

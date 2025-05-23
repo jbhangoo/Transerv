@@ -1,5 +1,10 @@
+"""
+Module Name: projects
+Description: This module contains routes related to project management.
+"""
+
 from flask import Blueprint, request, jsonify, render_template
-from flask_login import login_required, current_user
+from flask_login import login_required
 
 from handlers.decorators import role_required, UserRole
 from models.data import db, Project, Species
@@ -13,11 +18,19 @@ project_bp = Blueprint('project', __name__, url_prefix='/projects')
 @login_required
 @role_required(UserRole.ADMIN)
 def project_index():
+    """
+    Function Name: project_index
+    Description: Displays the project index page.
+    """
     species = Species.query.order_by('common_name')
     return render_template('project/projects.html', species=species)
 
 @project_bp.route('/list', methods=['GET', 'POST'])
 def project_list():
+    """
+    Function Name: project_list
+    Description: Retrieves a list of all projects.
+    """
     # Logic to retrieve all projects
     projects = Project.query.order_by('name')
     return jsonify({'projects':
@@ -33,6 +46,10 @@ def project_list():
 @login_required
 @role_required(UserRole.ADMIN)
 def project_add():
+    """
+    Function Name: project_add
+    Description: Adds a new project.
+    """
     name = request.form.get('name')
     description = request.form.get('description')
     species_id = request.form.get('species_id')
@@ -47,6 +64,10 @@ def project_add():
 @login_required
 @role_required(UserRole.ADMIN)
 def project_edit(project_id):
+    """
+    Function Name: project_edit
+    Description: Edits an existing project.
+    """
     project = Project.query.get(project_id)
     form = ProjectForm()
 
@@ -79,6 +100,10 @@ def project_edit(project_id):
 @login_required
 @role_required(UserRole.ADMIN)
 def project_delete(project_id):
+    """
+    Function Name: project_delete
+    Description: Deletes a project by ID.
+    """
     # Logic to find project by id and delete it
     project = Project.query.get(project_id)
     db.session.delete(project)
