@@ -7,6 +7,8 @@ import requests
 
 from flask import Blueprint, jsonify
 from flask_login import login_required
+from sqlalchemy.orm import joinedload
+
 from handlers.decorators import role_required
 from models.data import db, Site, ProjectSite, UserRole, Geography
 
@@ -19,22 +21,23 @@ def get_proj_sites(project_id):
     :param project_id:
     :return:
     """
-    sites = (ProjectSite.query
-             .filter_by(project_id=project_id)
-             .join(Site)
-             .with_entities(ProjectSite.id, ProjectSite.site_id, Site.name, Site.description)
+    sites = (db.session.query(ProjectSite, Site)
+             .join(Site, ProjectSite.site_id == Site.id)
+             .filter(ProjectSite.project_id == project_id)
+             .options(joinedload(Site.points))
              .all())
+
     data = []
-    for site in sites:
-        points = (Geography.query
-                  .filter_by(site_id=site.id)
-                  .with_entities(Geography.latitude, Geography.longitude)
-                  .all())
-        data.append({'id': site.id,
-                     'site_id': site.site_id,
-                     'name': site.name,
-                     'description': site.description,
-                     'points': [{'lat':pt.latitude, 'lng':pt.longitude} for pt in points]})
+    for project_site, site in sites:
+        points = [{'id': p.id, 'lat': p.latitude, 'lng': p.longitude}
+                  for p in site.points]
+        data.append({
+            'id': project_site.id,
+            'site_id': site.id,
+            'name': site.name,
+            'description': site.description,
+            'points': points
+        })
     return jsonify(data)
 
 @ajax_bp.route('/export')

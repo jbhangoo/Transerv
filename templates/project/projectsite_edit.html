@@ -27,7 +27,7 @@
 }
 </style>
 {% block content %}
-<button type="button" id="backButton" class="btn btn-outline-primary btn-sm mb-3">
+<button type="button" id="backButton" class="btn btn-outline-primary btn-sm mb-3" onclick="window.location.href='/projectsites'">
   <i class="fas fa-arrow-left"></i> Back to projects
 </button>
   <div class="container mt-4">
@@ -149,10 +149,10 @@
         <div class="col-1 d-flex align-items-center">
           <small class="text-muted">#${pointIndex}</small>
         </div>
-        <div class="col-5">
+        <div class="col-3">
           <input type="number" class="form-control latitude-input" placeholder="Latitude" step="any" value="${lat}">
         </div>
-        <div class="col-5">
+        <div class="col-3">
           <input type="number" class="form-control longitude-input" placeholder="Longitude" step="any" value="${lng}">
         </div>
         <div class="col-1">

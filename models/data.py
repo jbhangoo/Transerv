@@ -195,17 +195,6 @@ class Geography(db.Model):
     easting = db.Column(db.Float)
     zone = db.Column(db.Integer)
     band = db.Column(db.String(1))
-    status = db.Column(db.Boolean, default=True) # True=active, False=not in use
-    comments = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=datetime.datetime.now(datetime.UTC))
-
-    def __init__(self, site_name, geodetic_system:str, latitude:float|None, longitude:float|None,
-                 northing:float|None, easting:float|None, zone=None, band=None,
-                 status:bool=True, comments=None):
-
-        if (latitude and longitude) or (northing and easting):
-            sid = Site.query.filter_by(name=site_name).first()
-            self.init_geo(sid, band, comments, easting, geodetic_system, latitude, longitude, northing, status, zone)
 
     def __init__(self, site_id, geodetic_system:str, latitude:float|None, longitude:float|None,
                  northing:float|None, easting:float|None, zone=None, band=None,

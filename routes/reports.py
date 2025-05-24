@@ -3,7 +3,6 @@ Module Name: reports
 Description: This module contains routes that generate reports
 """
 import json
-from sqlalchemy.orm import joinedload
 
 from flask import Blueprint, render_template, request, flash
 from forms.site_form import SiteForm
@@ -42,16 +41,21 @@ def project_report():
                 flash(f"Error in {field}: {error}", "danger")
         return error_response
 
+    if form.project.data:
+        project_id = form.project.data
 
-    project_id = form.project.data  # Get selected project
+        # Query observations based on the selected species
+        obs_stmt = db.select(Observation).join(Survey).filter_by(project_id=project_id)
+        observations = db.session.execute(obs_stmt).scalars().all()
 
-    # Query observations based on the selected species
-    obs_stmt = db.select(Observation).join(Survey).filter_by(project_id=project_id)
-    observations = db.session.execute(obs_stmt).scalars().all()
-
-    # Process files for chart and table
-    processed_data = process_observations(observations)
-    chart_json = json.dumps(processed_data)  # Convert processed files to JSON for the chart
+        # Process chart and table data
+        processed_data = process_observations(observations)
+        chart_json = json.dumps(processed_data)
+    else:
+        project_id = None
+        observations = []
+        processed_data = []
+        chart_json = '[]'
 
     return render_template('reports/project.html',
                            form=form,
@@ -83,7 +87,7 @@ def process_observations(observations:list[Observation]):
 @report_bp.route('/sites_map')
 def sites_map():
     """
-
+    Map
     :return:
     """
     projects = Project.query.order_by('name')

@@ -1,5 +1,14 @@
 """
+Main application module for the entry point into the Flask application.
 
+- creates the Flask application
+- Sets CSRF protection
+- Loads configuration
+- configures the database
+- Starts logging
+- Sets up the login manager
+. Registers the request processors, error handlers, CLI for database initialization
+- Registers the route blueprints
 """
 import os
 import logging
@@ -48,6 +57,7 @@ login_manager.login_message = 'Please log in first.'
 
 @login_manager.user_loader
 def load_user(user_id):
+    # since the user_id is stored in the session, we can use it to load the user details
     return User.query.get(int(user_id))
 
 # Register request processors
@@ -62,6 +72,7 @@ register_cli_commands(app)
 # Register Routes and Blueprints
 @app.route('/')
 def index():
+    """ Main dashboard page for the application """
     return render_template('dashboard.html')
 
 app.register_blueprint(ajax_bp)

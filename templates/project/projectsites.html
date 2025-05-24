@@ -20,11 +20,9 @@
                 <table id="projectsite-table" class="table table-striped">
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Project</th>
                             <th>Site</th>
-                            <th>Delete</th>
-                            <th>Edit</th>
+                            <th>Desc</th>
+                            <th>Manage</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -148,7 +146,6 @@
         let tablebody = '';
         tableData.forEach(projectsite => {
             tablebody += `<tr>
-            <td>${projectsite.id}</td>
             <td>${projectsite.name}</td>
             <td>${projectsite.description}</td>
             <td>

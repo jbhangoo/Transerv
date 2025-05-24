@@ -1,5 +1,5 @@
 """
-Config file
+Configuration file for env variables
 """
 import os
 from dotenv import load_dotenv
@@ -15,6 +15,9 @@ POSTGRESQL_SQLALCHEMY_DATABASE_URI = (f"postgresql://{os.getenv('DB_USER')}:"
                                     f"?sslmode=require")
 
 class Config:
+    """
+    Load required environment variables
+    """
     SQLALCHEMY_DATABASE_URI = SQLITE_SQLALCHEMY_DATABASE_URI
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-key-here')

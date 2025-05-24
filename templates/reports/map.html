@@ -1,19 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}Map Results{% endblock %}
+{% block title %}Map{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    <h1 class="mb-4"><i class="fas fa-dove me-2"></i>Map</h1>
+    <h1 class="mb-4">Map</h1>
 
-    <!-- Filters -->
-    <div class="card mb-4">
-        <div class="card-header bg-light">
-            <h5 class="mb-0">
-                <i class="fas fa-filter me-2"></i>Projects
-            </h5>
-        </div>
-        <div class="card-body">
+    <div class="row mb-4">
+        <div class="col-12">
             <label class="form-label" for="project">Project</label>
             <select id="project" class="form-select">
                 <option value="">Choose project</option>
@@ -29,7 +23,7 @@
             <div class="card mb-4">
                 <div class="card-header bg-light">
                     <h5 class="mb-0">
-                        <i class="fas fa-map-marker-alt me-2"></i>Map
+                        <i class="fas fa-map-marker-alt me-2"></i>Sites
                     </h5>
                 </div>
                 <div class="card-body">
@@ -106,14 +100,14 @@
     });
 
     // Initialize the map
-    const map = L.map('projmap').setView([40.505, -80.09], 9);
+    const map = L.map('projmap').setView([43.505, -80.09], 9);
 
     // Add OpenStreetMap tile layer
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
 
-    // Each project is a separate layer
+    // Each project is a separate layer stored in layerGroups
     const projectSelect = document.getElementById('project');
     const layerGroups = {};
 
@@ -122,49 +116,69 @@
             const projId = projectSelect.value;
             fetch('/ajax/get_proj_sites/' + projId)
                 .then(response => response.json())
-                .then(data => displayProjectLayer(projectSelect.textContent, data));
+                .then(data => displayProjectLayer(projectSelect.options[projectSelect.selectedIndex].text, data));
         });
     });
 
-    const displayProjectLayer = (name, data) => {
-        // Clear existing layers
-        Object.keys(layerGroups).forEach((layerName) => {
-            map.removeLayer(layerGroups[layerName]);
-        });
+const displayProjectLayer = (name, data) => {
+    // Clear existing layers
+    Object.keys(layerGroups).forEach((layerName) => {
+        map.removeLayer(layerGroups[layerName]);
+    });
 
-        // Add new layer for this project
-        const layerName = name;
-        const layer = L.layerGroup();
-        layerGroups[layerName] = layer;
+    // Add new layer for this project. FeatureGroup needed to calculate bounds.
+    const featureGroup = L.featureGroup();
+    layerGroups[name] = featureGroup;
 
-        // Create a line for each site
-        data.forEach((siteData) => {
-            const linePoints = siteData.points.map(pt =>
-            {
-                [pt.lat, pt.lng];
-                L.marker(pt, {icon: createIcon('#f00')}).addTo(layer);
+    // Create a polygon for each site
+    data.forEach((siteData) => {
+        const polygonPoints = siteData.points.map(pt => [pt.lat, pt.lng]);
+
+        if (polygonPoints.length > 0) {
+            // Create a LatLngBounds object from the points
+            const bounds = L.latLngBounds(polygonPoints);
+
+            // Create a rectangle layer using these bounds
+            const boundingBox = L.rectangle(bounds, {
+                color: '#f88',   // Blue color for the bounding box
+                weight: 2
             });
-            const siteline = L.polyline(linePoints, {color: '#f0f'}).addTo(layer);
 
-            siteline.bindPopup(`<b>${siteData.name}</b><br>${siteData.description}`);
-            layer.addLayer(siteline);
+            boundingBox.bindPopup(`<b>${siteData.name}</b><br>${siteData.description || ''}`);
+            boundingBox.addTo(featureGroup);
+        }
+
+        // Add a marker to each vertex in the polygon
+        siteData.points.forEach(pt => {
+            const marker = L.marker([pt.lat, pt.lng], {
+                icon: createIcon('#f00')
+            });
+            marker.addTo(featureGroup);
         });
+    });
 
-        layer.addTo(map);
+    // Add the featureGroup to the map then draw it
+    featureGroup.addTo(map);
+    if (featureGroup.getLayers().length > 0) {
+        map.fitBounds(featureGroup.getBounds());  // Optional: Zoom to show all features
     }
+}
 
-    // Custom marker icons
-    function createIcon(color) {
-        return L.divIcon({
-            className: 'custom-marker',
-            html: `<svg width="24" height="36" viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
-                    <path fill="${color}" d="M12 0C5.4 0 0 5.4 0 12c0 7.2 12 24 12 24s12-16.8 12-24c0-6.6-5.4-12-12-12z"/>
-                    <circle fill="white" cx="12" cy="12" r="5"/>
-                  </svg>`,
-            iconSize: [24, 36],
-            iconAnchor: [12, 36],
-            popupAnchor: [0, -36]
-        });
-    }
+function createIcon(color) {
+    return L.divIcon({
+        html: `<div style="
+                width: 12px;
+                height: 12px;
+                background: ${color};
+                transform: rotate(45deg);
+                border: 1px solid #fff;
+                box-shadow: 0 0 2px rgba(0,0,0,0.5);
+            "></div>`,
+        className: 'diamond-marker',
+        iconSize: [12, 12],
+        iconAnchor: [6, 6],  // Center the icon
+        popupAnchor: [0, -6]  // Position popup above the marker
+    });
+}
 </script>
 {% endblock %}
