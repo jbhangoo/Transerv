@@ -38,6 +38,7 @@ def get_proj_sites(project_id):
             'description': site.description,
             'points': points
         })
+    print("get_proj_sites",data)
     return jsonify(data)
 
 @ajax_bp.route('/export')

@@ -22,10 +22,11 @@ def survey_list():
     Function Name: survey_list
     Description: Lists all surveys.
     """
-    all_surveys = Survey.query.order_by('name', 'survey_date', 'time_start').join(Site)\
+    all_surveys = Survey.query.order_by('project_id', 'name', 'survey_date', 'time_start').join(Site)\
                .with_entities(Survey.id, Site.name, Survey.survey_date,
                               Survey.time_start, Survey.time_end,
                               Survey.observer_count, Survey.comments).all()
+    print("survey_list", all_surveys)
     return jsonify({'surveys':
                         [{
                             'id': survey.id,
@@ -46,17 +47,33 @@ def survey_add():
     Description: Adds a new survey.
     """
     project = request.form.get('project')
+    project = int(project)
     site = request.form.get('site')
+    if (not site) or (site == '0'):
+        return jsonify({'message': 'Site is required'}), 400
+    else:
+        site = int(site)
+
     survey_date = request.form.get('survey_date')
+    if not survey_date:
+        return jsonify({'message': 'Survey date is required'}), 400
+
     time_start = request.form.get('time_start')
     time_end = request.form.get('time_end')
     if time_end <= time_start:
-        flash("End must be after start", "error")
+        return jsonify({'message': f'Start time ({time_start}) must be before end time ({time_end})'}), 400
     observer_count = request.form.get('observer_count')
+    if not observer_count:
+        observer_count = 0
+    else:
+        observer_count = int(observer_count)
     comments = request.form.get('comments')
-    new_survey = Survey(project=project, site=site, survey_date=survey_date,
+    print("Creating new survey...")
+    print(f"Adding SURVEY: User {current_user.id}, Project {project}, Site {site}, {survey_date}, {time_start}, {time_end}, nobs={observer_count}, comments= '{comments}'")
+    new_survey = Survey(user_id=current_user.id, project_id=project, site_id=site, survey_date=survey_date,
                          time_start=time_start, time_end=time_end,
                          observer_count=observer_count, comments=comments)
+    print(new_survey)
     db.session.add(new_survey)
     db.session.commit()
     return jsonify({'message': f'Survey "{survey_date}" added'}), 201
@@ -80,19 +97,20 @@ def survey_edit(survey_id):
     project = Project.query.get(survey.project_id)
 
     form = SurveyForm()
-    form.site.choices = [(site.id, site.name) for site in Site.query.order_by('name')]
-    form.site.choices.insert(0, (0, 'Choose site'))
-    form.project.choices = [(proj.id, proj.name) for proj in Project.query.order_by('name')]
+    """form.project.choices = [(proj.id, proj.name) for proj in Project.query.order_by('name')]
     form.project.choices.insert(0, (0, 'Choose project'))
+    form.project.data = survey.project_id
     form.site.choices = [(site.id, site.name) for site in
                          ProjectSite.query.filter_by(project_id=project.id or 0)
                          .join(Site).with_entities(Site.id, Site.name)
                          .all()]
-    form.site.data = survey.site_id
+    form.site.choices.insert(0, (0, 'Choose site'))
+    form.site.data = survey.site_id"""
 
     newform = SurveyForm(data=form.data)
     newform.project.choices = [(proj.id, proj.name) for proj in Project.query.order_by('name')]
     newform.project.choices.insert(0, (0, 'Choose project'))
+    newform.project.data = survey.project_id
     newform.site.choices = [(site.id, site.name)
                             for site in ProjectSite.query.filter_by(project_id=project.id or 0)
                             .join(Site).with_entities(Site.id, Site.name).all()]
@@ -150,10 +168,16 @@ def survey_edit(survey_id):
 @login_required
 @role_required(UserRole.MEMBER)
 def observation_add(survey_id):
+    project_id = Survey.query.get(survey_id).project_id
+    species_id = Project.query.get(project_id).species_id
+
     form = ObservationForm()
     form.survey_id.data = survey_id
     form.species_id.choices = [(species.id, species.common_name)
                                for species in Species.query.order_by('common_name')]
+    form.species_id.choices.insert(0, (0, 'Choose species'))
+    form.species_id.data = species_id or 0
+
 
     # join Species to get common name
     results = (db.session.query(Observation)
@@ -194,9 +218,9 @@ def observation_add(survey_id):
 @role_required(UserRole.MEMBER)
 def observation_edit(observation_id):
     form = ObservationForm()
-    results = (db.session.query(Observation)
-               .filter(Observation.id == observation_id)
-               .join(Species).first())
+    results = db.session.query(Observation)\
+               .filter(Observation.id == observation_id)\
+               .join(Species).first()
 
     newform = ObservationForm(data=form.data)
     newform.species_id.choices = [(species.id, species.common_name)
@@ -227,11 +251,19 @@ def observation_edit(observation_id):
     if obs.count_supplemental != form.count_supplemental.data:
         obs.count_supplemental = form.count_supplemental.data
 
+    if obs.direction != form.direction.data:
+        obs.direction = form.direction.data
+
     if obs.behavior != form.behavior.data:
         obs.behavior = form.behavior.data
 
     if obs.comments != form.comments.data:
         obs.comments = form.comments.data
+
+    if obs.latitude != form.latitude.data:
+        obs.latitude = form.latitude.data
+    if obs.longitude != form.longitude.data:
+        obs.longitude = form.longitude.data
 
     db.session.commit()
     flash('Observation Updated!')

@@ -1,3 +1,4 @@
+import json
 from flask import Blueprint, jsonify, render_template, request
 from flask_login import login_required, current_user
 
@@ -38,7 +39,27 @@ def projectsite_list():
 @role_required(UserRole.ADMIN)
 def projectsite_add():
     project_id = request.form.get('project_id')
-    site_id = request.form.get('site_id')
+    site_name = request.form.get('siteName')
+    description = request.form.get('siteDescription')
+
+    # Extract points (which was added as a JSON string)
+    points_json = request.form.get('points')
+    points = json.loads(points_json) if points_json else []
+
+    if not site_name:
+        return jsonify({'message': 'Site name is required'}), 400
+    new_site = Site(name=site_name, description=description)
+    db.session.add(new_site)
+    db.session.flush()  # Ensure new_site.id is available for use
+
+    # Add points to Geography table
+    for point in points:
+        new_geography = Geography(site_id=new_site.id, latitude=point['lat'], longitude=point['lng'])
+        db.session.add(new_geography)
+    db.session.commit()
+
+    # Add ProjectSite
+    site_id = Site.query.filter_by(name=site_name).first().id
     new_projectsite = ProjectSite(project_id=project_id, site_id=site_id)
     db.session.add(new_projectsite)
     db.session.commit()

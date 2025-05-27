@@ -26,6 +26,12 @@ jobs:
       run: |
         echo "PyLint Results:"
         cat pylint_report.txt
+    - name: Create database for pytest
+      env:
+        FLASK_APP: Transerv
+        FLASK_ENV: test
+      run: |
+        flask init_db
     - name: Run tests with pytest
       run: |
         echo "pytest"

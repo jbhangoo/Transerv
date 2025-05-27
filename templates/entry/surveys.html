@@ -23,13 +23,13 @@
                     </select>
                 <br>
                     <label for="site" class="form-label">Site</label>
-                    <select name="site" id="site" class="form-select d-inline-block"></select>
+                    <select name="site" id="site" class="form-select d-inline-block" required></select>
                 </div>
 
                 <div class="col-md-6">
                     <label for="survey_date" class="form-label">Survey date</label>
                     <div class="input-group">
-                        <input type="text" name="survey_date" id="survey_date" class="form-control datepicker">
+                        <input type="text" name="survey_date" id="survey_date" class="form-control datepicker" required>
                         <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
                     </div>
                     <label for="time_start" class="form-label">Start time</label>
@@ -47,7 +47,7 @@
             <div class="row mb-4">
                 <div class="col-md-6">
                     <label for="observer_count" class="form-label"> observer_count</label>
-                    <input type="text" name="observer_count" id="Observer count" placeholder="0" />
+                    <input type="number" name="observer_count" id="observer_count" placeholder="0" step="1" min="0" />
                     <label for="comments" class="form-label"> comments</label>
                     <input type="text" name="comments" id="comments" />
                 </div>
@@ -82,12 +82,11 @@
                             <tr>
                                 <th>Site</th>
                                 <th>Date</th>
-                                <th>Time</th>
-                                <th>Observers</th>
+                                <th>Start</th>
+                                <th>End</th>
+                                <th># Observers</th>
                                 <th>Comments</th>
-                                <th>Delete</th>
-                                <th>Edit</th>
-                                <th>Add Observations</th>
+                                <th>Manage</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -135,17 +134,22 @@
     document.getElementById('add-survey-form').addEventListener('submit', function(e) {
         e.preventDefault();
         const formData = new FormData(this);
-        fetch('/survey/add', {
+        fetch('/entry/survey_add', {
             method: 'POST',
             body: formData
         })
         .then(response => {
             if (response.ok) {
                 fetchSurveys();
+            } else {
+                response.json().then(data => {
+                    document.getElementById('status').innerHTML = `${response.statusText}: ${data.message}`;
+                });
             }
-            document.getElementById('status').innerHTML = response.statusText;
         })
-        .catch((error) => {document.getElementById('status').innerHTML = error;});
+        .catch((error) => {
+            document.getElementById('status').innerHTML = `${error}(${response.status}): ${response.statusText}`;
+        });
     });
 
     const projectSelect = document.getElementById('project');
@@ -202,8 +206,7 @@
                         <td>${survey.observer_count}</td>
                         <td>${survey.comments}</td>
                         <td>
-                            <button onclick="deleteSurvey(${survey.id})" class="btn btn-outline-danger me-2">Delete</button>
-                            <button onclick="window.location.href='/entry/survey/edit/${survey.id}'" class="btn btn-outline-warning me-2">Edit</button>
+                            <button onclick="window.location.href='/entry/survey_edit/${survey.id}'" class="btn btn-outline-warning me-2">Edit</button>
                             <button onclick="window.location.href='/entry/observation_add/${survey.id}'" class="btn btn-outline-secondary">Add Obs</button>
                         </td>
                     </tr>`;

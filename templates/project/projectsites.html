@@ -2,6 +2,17 @@
 {% block title %}Project Sites{% endblock %}
 {% block content %}
 <div class="container mt-4">
+    <h1 class="mb-4">
+        <i class="fas fa-globe me-2"></i>Sites
+    </h1>
+    <label class="mt-2"> Project
+        <select id="project" required>
+            <option value="">Choose</option>
+            {% for project in projects %}
+            <option value="{{ project.id }}">{{ project.name }}</option>
+            {% endfor %}
+        </select>
+    </label>
     <div class="card">
         <div class="card-body">
         <div class="row mb-4">
@@ -9,19 +20,13 @@
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h4 class="mb-0"><i class="fas fa-globe me-2"></i>Project Sites</h4>
                 </div>
-                <label class="mt-2"> Project
-                    <select id="project" required>
-                        <option value="">Choose</option>
-                        {% for project in projects %}
-                        <option value="{{ project.id }}">{{ project.name }}</option>
-                        {% endfor %}
-                    </select>
-                </label>
                 <table id="projectsite-table" class="table table-striped">
                     <thead>
                         <tr>
+                            <th>Id</th>
                             <th>Site</th>
                             <th>Desc</th>
+                            <th># Points</th>
                             <th>Manage</th>
                         </tr>
                     </thead>
@@ -39,9 +44,9 @@
                   <div class="card-body">
                     <form id="siteForm">
                         <label for="siteName" class="form-label required-label">Site Name</label>
-                        <input type="text" class="form-control" id="siteName" required>
+                        <input type="text" class="form-control" name="siteName" id="siteName" placeholder="Choose a project first" required>
                         <label for="siteDescription" class="form-label">Site Description</label>
-                        <input type="text" class="form-control" id="siteDescription">
+                        <input type="text" class="form-control" name="siteDescription" id="siteDescription">
 
                       <div class="mb-3">
                         <label class="form-label">Geographic Points</label>
@@ -136,53 +141,48 @@
         const projectId = document.getElementById('project').value;
         fetch('/ajax/get_proj_sites/' + projectId)
             .then(response => response.json())
-            .then(data => fillSiteTable(data))
+            .then(data => updateSitesTable(data))
             .catch((error) => {document.getElementById('status').innerHTML = error;});
     }
-    // Fetch and display projectsites
-    function fillSiteTable(tableData) {
-        const table = document.getElementById('projectsite-table');
-
-        let tablebody = '';
-        tableData.forEach(projectsite => {
-            tablebody += `<tr>
-            <td>${projectsite.name}</td>
-            <td>${projectsite.description}</td>
-            <td>
-                <button onclick="deleteSite(${projectsite.id})" class="btn btn-outline-danger me-2">Delete</button>
-            </td>
-            <td>
-                <button onclick="editSite(${projectsite.site_id})" class="btn btn-outline-warning me-2">Edit</button>
-            </td>
-        </tr>`;
-        });
-        table.tBodies[0].innerHTML = tablebody;
-    }
-
 
     function addSite(formElt) {
         const formData = new FormData(formElt);
-        fetch('/sites/add', {
+        const points = [];  // Collect points from the form
+
+        // Add project to form data
+        const projectId = document.getElementById('project').value;
+        formData.append('project_id', projectId);
+
+        // Collect points data
+        document.querySelectorAll('.point-row').forEach(row => {
+            const lat = row.querySelector('.latitude-input').value;
+            const lng = row.querySelector('.longitude-input').value;
+
+            if (lat && lng) {
+                points.push({
+                    latitude: parseFloat(lat),
+                    longitude: parseFloat(lng)
+                });
+            }
+        });
+
+        // Add points as a JSON string to form data
+        formData.append('points', JSON.stringify(points));
+
+        // Send the form data to the server
+        fetch('/projectsites/add', {
             method: 'POST',
             body: formData
         })
-        .then(response =>  response.json())
+        .then(response => response.json())
         .then((json) => {
             addSitetoProject(json.id);
             document.getElementById('status').innerHTML = json.message;
             fetchProjects();
         })
-        .catch((error) => {document.getElementById('status').innerHTML = error;});
-    }
-
-    function addSitetoProject(siteId) {
-        fetch(`/projectsites/add/${siteId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        })
-        .catch((error) => {document.getElementById('status').innerHTML = error;});
+        .catch((error) => {
+            document.getElementById('status').innerHTML = error;
+        });
     }
 
     // Delete site
@@ -220,23 +220,31 @@
     const pointsContainer = document.getElementById('pointsContainer');
     const addPointBtn = document.getElementById('addPointBtn');
     const sitesTableBody = document.getElementById('sitesTableBody');
+    const sitesTable = document.getElementById('projectsite-table');
 
     // Initialize Bootstrap modal
     const pointsModal = new bootstrap.Modal(document.getElementById('pointsModal'));
 
     // Add event listeners
     document.addEventListener('DOMContentLoaded', function() {
-      // Add point button
-      addPointBtn.addEventListener('click', addPointRow);
+        // Suggest user to select a project before adding a site
+        siteName.addEventListener('focus', function() {
+            if (document.getElementById('project').value === '') {
+                showAlert('Please select a project first.');
+            }
+        });
 
-      // Form submission
-      siteForm.addEventListener('submit', handleFormSubmit);
+        // Add point button
+        addPointBtn.addEventListener('click', addPointRow);
 
-      // Initial point row handler
-      setupPointRowHandlers(document.querySelector('.point-row'));
+        // Form submission
+        siteForm.addEventListener('submit', handleFormSubmit);
 
-      // Update the table initially
-      updateSitesTable();
+        // Initial point row handler
+        setupPointRowHandlers(document.querySelector('.point-row'));
+
+        // Update the table initially
+        updateSitesTable();
     });
 
     // Add a new point input row
@@ -279,8 +287,8 @@ function handleFormSubmit(e) {
   e.preventDefault();
 
   // Validate form
-  if (!siteName.value.trim()) {
-    alert('Site name is required.');
+  if (!project.value.trim() ||  !siteName.value.trim()) {
+    showAlert('Project and Site name are both required.');
     return;
   }
 
@@ -298,6 +306,8 @@ function handleFormSubmit(e) {
       });
     }
   });
+
+  addSite(siteForm);
 
   // Create new site object
   const newSite = {
@@ -325,28 +335,30 @@ function handleFormSubmit(e) {
 }
 
 // Update sites table
-function updateSitesTable() {
-  if (sites.length === 0) {
-    sitesTableBody.innerHTML = '<tr><td colspan="5" class="text-center">No sites available</td></tr>';
+function updateSitesTable(sites) {
+  if (!sites || (sites.length === 0)) {
+    sitesTable.tBodies[0].innerHTML = '<tr><td colspan="5" class="text-center">No sites available</td></tr>';
     return;
   }
 
-  sitesTableBody.innerHTML = '';
+  //sitesTableBody.innerHTML = '';
+  sitesTable.tBodies[0].innerHTML = '';
 
   sites.forEach(site => {
     const row = document.createElement('tr');
     row.innerHTML = `
       <td>${site.id}</td>
-      <td>${escapeHtml(site.name)}</td>
-      <td>${escapeHtml(site.description || '')}</td>
+      <td>${site.name}</td>
+      <td>${site.description || ''}</td>
       <td>${site.points.length}</td>
       <td>
-        <button class="btn btn-sm btn-primary view-points" data-site-id="${site.id}">View Points</button>
-        <button class="btn btn-sm btn-warning edit-site" data-site-id="${site.id}">Edit</button>
-        <button class="btn btn-sm btn-danger delete-site" data-site-id="${site.id}">Delete</button>
+        <button class="btn btn-sm btn-outline-primary view-points" data-site-id="${site.id}">View Points</button>
+        <button class="btn btn-sm btn-outline-warning edit-site" data-site-id="${site.id}">Edit</button>
+        <button class="btn btn-sm btn-outline-danger delete-site" data-site-id="${site.id}">Delete</button>
       </td>
     `;
-    sitesTableBody.appendChild(row);
+    //sitesTableBody.appendChild(row);
+    sitesTable.tBodies[0].appendChild(row);
 
     // Add event handlers
     row.querySelector('.view-points').addEventListener('click', () => viewPoints(site));
@@ -398,14 +410,6 @@ function showAlert(message, type) {
     alertDiv.classList.remove('show');
     setTimeout(() => alertDiv.remove(), 150);
   }, 3000);
-}
-
-// Helper function to escape HTML
-function escapeHtml(str) {
-  if (!str) return '';
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
 }
 </script>
 {% endblock %}

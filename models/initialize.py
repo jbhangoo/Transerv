@@ -19,11 +19,11 @@ sample_sites = [
 ]
 
 sample_coords = [
-    {'site': 'Land1', 'lat': 45.030841, 'lng': -74.674427},
-    {'site': 'Lake2', 'lat': 45.019838, 'lng': -74.802194},
-    {'site': 'Air3', 'lat': 44.983328, 'lng': -74.629196},
-    {'site': 'Island4', 'lat': 45.014422, 'lng': -74.645509},
-    {'site': 'River5', 'lat': 45.033821, 'lng': -74.577799}
+    {'site_id': 1, 'lat': 45.030841, 'lng': -74.674427},
+    {'site_id': 1, 'lat': 45.019838, 'lng': -74.802194},
+    {'site_id': 2, 'lat': 44.983328, 'lng': -74.629196},
+    {'site_id': 1, 'lat': 45.014422, 'lng': -74.645509},
+    {'site_id': '2', 'lat': 45.033821, 'lng': -74.577799}
 ]
 
 sample_species = [
@@ -85,7 +85,7 @@ def load_sites(app, db):
 
     for data in sample_coords:
         # site_name, geodetic_system, latitude:float, longitude:float, northing:float, easting:
-        geo = Geography(site_name=data['site'], geodetic_system='WGS84',
+        geo = Geography(site_id=data['site_id'], geodetic_system='WGS84',
                         latitude=data['lat'], longitude=data['lng'], northing=None, easting=None)
         geos_to_add.append(geo)
     with app.app_context():

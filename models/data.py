@@ -139,6 +139,21 @@ class Survey(db.Model):
     observations = db.relationship('Observation', backref='survey')
     created_at = db.Column(db.DateTime, default=datetime.datetime.now(datetime.UTC))
 
+    def __init__(self, user_id:int, project_id:int, site_id:int, survey_date:str, time_start, time_end, observer_count, comments):
+        self.user_id = user_id
+        self.project_id = project_id
+        self.site_id = site_id
+        dsurvey = datetime.datetime.strptime(survey_date, '%Y-%m-%d').date()
+        self.survey_date = dsurvey
+        tstart = datetime.datetime.strptime(time_start, '%H:%M').time()
+        tend = datetime.datetime.strptime(time_end, '%H:%M').time()
+        self.time_start = tstart
+        self.time_end = tend
+        self.observer_count = observer_count
+        self.comments = comments
+    def __repr__(self):
+        return f'Survey <Project {self.project_id}, Site {self.site_id}, Date {self.survey_date}, User {self.user_id}, observer count {self.observer_count}>'
+
 class Observation(db.Model):
     """
     Class Name: Observation
