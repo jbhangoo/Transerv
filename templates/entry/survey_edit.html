@@ -6,92 +6,98 @@
         <i class="fas fa-dove me-2"></i>Survey Edit
     </h1>
 
-    <div class="card mb-4">
-        <div class="card-header bg-light">
-            <h5 class="mb-0">
-                <i class="fas fa-book-open me-2"></i>Surveys
-            </h5>
+    <div class="card">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0"><i class="fas fa-book-open me-2"></i>Survey Details</h4>
         </div>
         <div class="card-body">
-            <form method="POST" class="row g-3" >
+            <form method="POST" class="row g-3">
                 {{ form.hidden_tag() }}
-            <div class="row mb-4">
-                <div class="col-md-6">
-                    {{ form.project.label(class="form-label") }}
-                    {{ form.project(class="form-control", id="project") }}
-                    <label for="site" class="form-label">Site</label>
-                    <select name="site" id="site" class="form-select"></select>
-                </div>
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            {{ form.project.label(class="form-label") }}
+                            {{ form.project(class="form-select", id="project") }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="site" class="form-label">Site</label>
+                            <select name="site" id="site" class="form-select"></select>
+                        </div>
+                        <div class="mb-3">
+                            {{ form.observer_count.label(class="form-label") }}
+                            {{ form.observer_count(class="form-control" + (" is-invalid" if form.observer_count.errors else "")) }}
+                            {% for error in form.observer_count.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.comments.label(class="form-label") }}
+                            {{ form.comments(class="form-control" + (" is-invalid" if form.comments.errors else "")) }}
+                            {% for error in form.comments.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
 
-                <div class="col-md-6">
-                    {{ form.survey_date.label(class="form-label") }}
-                    <div class="input-group">
-                        {{ form.survey_date(class="form-control datepicker" + (" is-invalid" if form.survey_date.errors else "")) }}
-                        <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            {{ form.survey_date.label(class="form-label") }}
+                            <div class="input-group">
+                                {{ form.survey_date(class="form-control datepicker" + (" is-invalid" if form.survey_date.errors else "")) }}
+                                <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                            </div>
+                            {% for error in form.survey_date.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.time_start.label(class="form-label") }}
+                            <div class="input-group">
+                                {{ form.time_start(class="form-control timepicker", value=form.time_start.data.strftime("%H:%M") + (" is-invalid" if form.time_start.errors else "")) }}
+                                <span class="input-group-text"><i class="fas fa-clock"></i></span>
+                            </div>
+                            {% for error in form.time_start.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.time_end.label(class="form-label") }}
+                            <div class="input-group">
+                                {{ form.time_end(class="form-control timepicker", value=form.time_end.data.strftime("%H:%M") + (" is-invalid" if form.time_end.errors else "")) }}
+                                <span class="input-group-text"><i class="fas fa-clock"></i></span>
+                            </div>
+                            {% for error in form.time_end.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
                     </div>
-                    {% for error in form.survey_date.errors %}
-                        <div class="invalid-feedback">{{ error }}</div>
-                    {% endfor %}
-                    {{ form.time_start.label(class="form-label") }}
-                    <div class="input-group">
-                        {{ form.time_start(class="form-control timepicker", value=form.time_start.data.strftime("%H:%M") + (" is-invalid" if form.time_start.errors else "")) }}
-                        <span class="input-group-text"><i class="fas fa-clock"></i></span>
-                    </div>
-                    {% for error in form.time_start.errors %}
-                        <div class="invalid-feedback">{{ error }}</div>
-                    {% endfor %}
-                    {{ form.time_end.label(class="form-label") }}
-                    <div class="input-group">
-                        {{ form.time_end(class="form-control timepicker", value=form.time_end.data.strftime("%H:%M") + (" is-invalid" if form.time_end.errors else "")) }}
-                        <span class="input-group-text"><i class="fas fa-clock"></i></span>
-                    </div>
-                    {% for error in form.time_end.errors %}
-                        <div class="invalid-feedback">{{ error }}</div>
-                    {% endfor %}
                 </div>
-            </div>
-            <div class="row mb-4">
-                <div class="col-md-4">
-                    {{ form.observer_count.label(class="form-label") }}
-                    <div class="input-group">
-                        {{ form.observer_count(class="form-control text" + (" is-invalid" if form.observer_count.errors else "")) }}
+                <div class="row mb-4">
+                    <div class="col-md-6">
                     </div>
-                    {% for error in form.observer_count.errors %}
-                        <div class="invalid-feedback">{{ error }}</div>
-                    {% endfor %}
-                    {{ form.comments.label(class="form-label") }}
-                    <div class="input-group">
-                        {{ form.comments(class="form-control textarea" + (" is-invalid" if form.comments.errors else "")) }}
+                    <div class="col-md-6 d-flex align-items-end">
+                        <button type="submit" class="btn btn-success me-2">
+                            <i class="fas fa-save me-1"></i> Save Changes
+                        </button>
+                        <a href="{{ url_for('entry.survey_edit', survey_id=survey_id) }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-sync-alt me-1"></i> Reset
+                        </a>
                     </div>
-                    {% for error in form.comments.errors %}
-                        <div class="invalid-feedback">{{ error }}</div>
-                    {% endfor %}
                 </div>
-
-                <div class="col-md-4 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary me-2">
-                        <i class="fas fa-pencil me-1"></i> Enter
-                    </button>
-                    <a href="{{ url_for('entry.survey_edit', survey_id=survey_id) }}" class="btn btn-outline-secondary">
-                        <i class="fas fa-sync-alt me-1"></i> Reset
-                    </a>
-                </div>
-            </div>
             </form>
         </div>
     </div>
 </div>
+
 <div class="container mt-4">
-    <div class="card-header bg-light">
-        <h5 class="mb-0">
-            <i class="fas fa-book-open me-2"></i>Recent Surveys
-        </h5>
-    </div>
-    <div class="card-body">
-        <div class="row mb-4">
-            <div class="col-md-12">
-                <table class="table table-striped">
-                    <thead>
+    <div class="card">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0"><i class="fas fa-book-open me-2"></i>Recent Surveys</h4>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-light">
                         <tr>
                             <th>Date</th>
                             <th>Time</th>
@@ -109,16 +115,16 @@
                             <td>{{ survey.time_start }}</td>
                             <td>{{ survey.site.name }}</td>
                             <td>{{ survey.observer_count }}</td>
-                            <td>{{ survey.comments }}</td>
+                            <td>{{ survey.comments|default('', true) }}</td>
                             <td>
                                 <a href="{{ url_for('entry.survey_edit', survey_id=survey.id) }}"
-                                   class="btn btn-sm btn-outline-primary me-1">
+                                   class="btn btn-sm btn-outline-primary" title="Edit Survey">
                                     <i class="fas fa-edit"></i>
                                 </a>
                             </td>
                             <td>
                                 <a href="{{ url_for('entry.observation_add', survey_id=survey.id) }}"
-                                   class="btn btn-sm btn-outline-success me-1">
+                                   class="btn btn-sm btn-outline-success" title="Add Observations">
                                     <i class="fas fa-dove"></i>
                                 </a>
                             </td>
@@ -147,47 +153,48 @@
         flatpickr(".timepicker", {
             noCalendar: true,
             enableTime: true,
-            dateFormat: "h:i",
+            dateFormat: "H:i",
+            time_24hr: true,
             allowInput: true
         });
-    });
 
+        const projectSelect = document.getElementById('project');
+        const siteSelect = document.getElementById('site');
 
-    const projectSelect = document.getElementById('project');
-    const siteSelect = document.getElementById('site');
+        if (projectSelect && projectSelect.value > 0) {
+            const pid = projectSelect.value;
+            fetch('/ajax/get_proj_sites/' + pid)
+              .then(response => response.json())
+              .then(data => fillSiteSelect(siteSelect, data))
+              .then(() => {
+                  const sel = {{ form.site.data|default(0) }};
+                  if (sel) siteSelect.value = sel.toString();
+              });
+        }
 
-    if (projectSelect.value > 0) {
-        const pid = projectSelect.value;
-        fetch('/ajax/get_proj_sites/' + pid)
-          .then(response => response.json())
-          .then(data => fillSiteSelect(siteSelect, data))
-          .then(data=>{
-              const sel = {{ form.site.data }};
-              siteSelect.value =  sel.toString();
-          });
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        projectSelect.addEventListener('change', () => {
-            const projectId = projectSelect.value;
-            fetch('/ajax/get_proj_sites/' + projectId)
-                .then(response => response.json())
-                .then(data => fillSiteSelect(siteSelect, data));
-        });
+        if (projectSelect) {
+            projectSelect.addEventListener('change', () => {
+                const projectId = projectSelect.value;
+                fetch('/ajax/get_proj_sites/' + projectId)
+                    .then(response => response.json())
+                    .then(data => fillSiteSelect(siteSelect, data));
+            });
+        }
     });
 
     const fillSiteSelect = (siteSelect, siteData) => {
-            siteSelect.innerHTML = '';
-            siteSelect.appendChild(createOption(0, 'Choose site'));
-            siteData.forEach(site => {
-              siteSelect.appendChild(createOption(site.id, site.name));
+        if (!siteSelect) return;
+        siteSelect.innerHTML = '';
+        siteSelect.appendChild(createOption('', 'Choose site'));
+        siteData.forEach(site => {
+            siteSelect.appendChild(createOption(site.id, site.name));
         });
-      }
+    }
 
     const createOption = (id, name) => {
         const option = document.createElement('option');
         option.value = id;
-        option.text = name;
+        option.textContent = name;
         return option;
     }
 </script>

@@ -43,6 +43,8 @@
                   </div>
                   <div class="card-body">
                     <form id="siteForm">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
                         <label for="siteName" class="form-label required-label">Site Name</label>
                         <input type="text" class="form-control" name="siteName" id="siteName" placeholder="Choose a project first" required>
                         <label for="siteDescription" class="form-label">Site Description</label>
@@ -176,7 +178,6 @@
         })
         .then(response => response.json())
         .then((json) => {
-            addSitetoProject(json.id);
             document.getElementById('status').innerHTML = json.message;
             fetchProjects();
         })
@@ -330,8 +331,8 @@ function handleFormSubmit(e) {
   pointsContainer.innerHTML = '';
   addPointRow();
 
-  // Show success message
-  showAlert('Site added successfully!', 'success');
+  // Show success message - removed. Done in addSite
+  //showAlert('Site added successfully!', 'success');
 }
 
 // Update sites table
@@ -352,9 +353,9 @@ function updateSitesTable(sites) {
       <td>${site.description || ''}</td>
       <td>${site.points.length}</td>
       <td>
-        <button class="btn btn-sm btn-outline-primary view-points" data-site-id="${site.id}">View Points</button>
-        <button class="btn btn-sm btn-outline-warning edit-site" data-site-id="${site.id}">Edit</button>
-        <button class="btn btn-sm btn-outline-danger delete-site" data-site-id="${site.id}">Delete</button>
+        <button class="btn btn-sm btn-outline-primary view-points" data-site-id="${site.site_id}">View Points</button>
+        <button class="btn btn-sm btn-outline-warning edit-site" data-site-id="${site.site_id}">Edit</button>
+        <button class="btn btn-sm btn-outline-danger delete-site" data-site-id="${site.site_id}">Delete</button>
       </td>
     `;
     //sitesTableBody.appendChild(row);
@@ -362,7 +363,8 @@ function updateSitesTable(sites) {
 
     // Add event handlers
     row.querySelector('.view-points').addEventListener('click', () => viewPoints(site));
-    row.querySelector('.delete-site').addEventListener('click', () => deleteSite(site.id));
+    row.querySelector('.edit-site').addEventListener('click', () => editSite(site.site_id));
+    row.querySelector('.delete-site').addEventListener('click', () => deleteSite(site.site_id));
   });
 }
 
@@ -381,8 +383,8 @@ function viewPoints(site) {
       const row = document.createElement('tr');
       row.innerHTML = `
         <td>${index + 1}</td>
-        <td>${point.latitude}</td>
-        <td>${point.longitude}</td>
+        <td>${point.lat}</td>
+        <td>${point.lng}</td>
       `;
       modalBody.appendChild(row);
     });

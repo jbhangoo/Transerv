@@ -212,7 +212,7 @@ class Geography(db.Model):
     band = db.Column(db.String(1))
 
     def __init__(self, site_id, geodetic_system:str, latitude:float|None, longitude:float|None,
-                 northing:float|None, easting:float|None, zone=None, band=None,
+                 northing:float|None=None, easting:float|None=None, zone=None, band=None,
                  status:bool=True, comments=None):
 
         if (latitude and longitude) or (northing and easting):

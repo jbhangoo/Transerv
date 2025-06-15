@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import SelectField, IntegerField, TextAreaField, SubmitField
+from wtforms import SelectField, IntegerField, DecimalField, TextAreaField, SubmitField
 from wtforms.validators import DataRequired, NumberRange, ValidationError, Optional
 
 class ObservationForm(FlaskForm):
@@ -7,8 +7,8 @@ class ObservationForm(FlaskForm):
     species_id = SelectField('Species', coerce=int, validators=[DataRequired()])
     count = IntegerField('Count', validators=[Optional()])
     count_supplemental = IntegerField('Count Supplemental', validators=[Optional()])
-    latitude = IntegerField('Latitude', validators=[Optional()])
-    longitude = IntegerField('Longitude', validators=[Optional()])
+    latitude = DecimalField('Latitude', validators=[Optional()])
+    longitude = DecimalField('Longitude', validators=[Optional()])
     direction = SelectField('Direction', choices=[
         ('', 'Select'),
         ('N', 'North'),

@@ -20,36 +20,31 @@
                 {{ form.hidden_tag() }}
                 <div class="row">
                     <div class="col-md-6">
-                        <label class="form-label" for="project">Project</label>
-                        {{ form.project(class="form-control", id="project") }}
-                        {{ form.date_start.label(class="form-label") }}
+                        <div class="input-group">
+                            <div class="form-label pe-2">{{ form.project.label }}</div>
+                            {{ form.project(class="form-control", id="project", style="min-width: 15rem") }}
+                        </div>
+                        <div class="input-group">
+                            <div class="form-label pe-2">{{ form.date_start.label }}</div>
+                            {{ form.date_start(class="form-control datepicker" + (" is-invalid" if form.date_start.errors else ""), style="min-width: 15rem") }}
+                        </div>
+                        <div class="input-group">
+                            <div class="form-label pe-2">{{ form.date_end.label }}</div>
+                            {{ form.date_end(class="form-control datepicker" + (" is-invalid" if form.date_end.errors else ""), style="min-width: 15rem") }}</div>
                     </div>
                     <div class="col-md-6 mb-3 d-flex align-items-end">
+                        <div>
                         <button type="submit" class="btn btn-primary me-2">
                             <i class="fas fa-search me-1"></i> Report
                         </button>
                         <a href="{{ url_for('report.project_report') }}" class="btn btn-outline-secondary">
                             <i class="fas fa-sync-alt me-1"></i> Reset
                         </a>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="input-group">
-                            {{ form.date_start(class="form-control datepicker" + (" is-invalid" if form.date_start.errors else "")) }}
-                            <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
                         </div>
-                        {{ form.date_end.label(class="form-label") }}
-                        <div class="input-group">
-                            {{ form.date_end(class="form-control datepicker" + (" is-invalid" if form.date_end.errors else "")) }}
-                            <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
                         <!-- Summary Cards -->
                         <div class="card text-white bg-success">
                             <div class="card-body m-2">
-                                <h5>Total Surveys: {{ surveys|length }}</h5>
+                                <h5>Total Surveys: {{ observations|groupby('survey_date')|list|length }}</h5>
                             </div>
                         </div>
                         <div class="card text-white bg-info">
@@ -63,8 +58,6 @@
         </div>
     </div>
 
-
-
     <!-- Interactive Chart -->
     <div class="card mb-4">
         <div class="card-header bg-light">
@@ -73,7 +66,14 @@
             </h5>
         </div>
         <div class="card-body">
-            <div id="speciesChart" style="height: 400px;"></div>
+            <div class="row">
+            <div class="col-md-6">
+                <div id="speciesChart" style="height: 400px;"></div>
+            </div>
+            <div class="col-md-6">
+                <div id="projmap" style="height: 400px;"></div>
+            </div>
+            </div>
         </div>
     </div>
 
@@ -94,29 +94,22 @@
                     <thead>
                         <tr>
                             <th>Species</th>
-                            <th>Total Count</th>
-                            <th>Sites</th>
-                            <th>First Seen</th>
-                            <th>Last Seen</th>
+                            <th>Date</th>
+                            <th>Site</th>
+                            <th>Count</th>
+                            <th>Supp Count</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for species in species_data %}
+                        {% for obs in observations %}
                         <tr>
                             <td>
-                                <strong>{{ species.name }}</strong>
-                                {% if species.is_rare %}
-                                <span class="badge bg-warning ms-2">Rare</span>
-                                {% endif %}
+                                <strong>{{ obs[1] }}</strong>
                             </td>
-                            <td>{{ species.total_count }}</td>
-                            <td>
-                                {% for loc in species.sites %}
-                                <span class="badge bg-secondary me-1">{{ loc }}</span>
-                                {% endfor %}
-                            </td>
-                            <td>{{ species.first_seen }}</td>
-                            <td>{{ species.last_seen }}</td>
+                            <td>{{ obs[0] }}</td>
+                            <td>{{ obs[2] }}</td>
+                            <td>{{ obs[5] }}</td>
+                            <td>{{ obs[6] }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -130,21 +123,133 @@
 {% block scripts %}
 <!-- Charting Library -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.26.2/plotly.min.js"></script>
+<script type="text/javascript">
+    // Turn Python object into HTML text
+    let obsTable = '';
+    {% for obs in observations %}
+        obsTable += `<tr>
+            <td>
+                <strong>{{ obs[1]|e }}</strong>
+            </td>
+            <td>{{ obs[0]|e }}</td>
+            <td>{{ obs[2]|e }}</td>
+            <td>{{ obs[5] if obs[5] is not none else 0  }}</td>
+            <td>{{ obs[6] if obs[6] is not none else 0  }}</td>
+        </tr>`;
+    {% endfor %}
+    obsTable += '</tr>';
 
-<!-- Chart Initialization -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const chartData = JSON.parse('{{ chart_data | tojson | safe }}');
+    // Turn JSON object into Javascript object
+    let chartData = JSON.parse('{{ chart_data|tojson|safe }}');
 
-    Plotly.newPlot('speciesChart', chartData.data, chartData.layout, {
-        responsive: true,
-        displayModeBar: true
+    document.addEventListener('DOMContentLoaded', function() {
+        Plotly.newPlot('speciesChart', chartData.data, chartData.layout, {
+            responsive: true,
+            displayModeBar: true
+        });
+
+        // Make chart responsive
+        window.addEventListener('resize', function() {
+            Plotly.Plots.resize('speciesChart');
+        });
+    });
+</script>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script type="text/javascript">
+    // Initialize the map
+    const map = L.map('projmap').setView([43.505, -80.09], 9);
+
+    // Add OpenStreetMap tile layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    // Each project is a separate layer stored in layerGroups
+    const projectSelect = document.getElementById('project');
+    const layerGroups = {};
+
+    document.addEventListener('DOMContentLoaded', function() {
+        projectSelect.addEventListener('change', () => {
+            const projId = projectSelect.value;
+            fetch('/ajax/get_proj_sites/' + projId)
+                .then(response => response.json())
+                .then(data => displayProjectSites(projectSelect.options[projectSelect.selectedIndex].text, data));
+        });
     });
 
-    // Make chart responsive
-    window.addEventListener('resize', function() {
-        Plotly.Plots.resize('speciesChart');
-    });
-});
+    const displayProjectSites = (name, data) => {
+        // Clear existing layers
+        Object.keys(layerGroups).forEach((layerName) => {
+            map.removeLayer(layerGroups[layerName]);
+        });
+
+        const featureGroup = L.featureGroup();
+        layerGroups[name] = featureGroup;
+
+        // Create a polygon for each site
+        data.forEach((siteData) => {
+            const polygonPoints = siteData.points.map(pt => [pt.lat, pt.lng]);
+
+            if (polygonPoints.length > 2) {
+                // Create a LatLngBounds object from the points
+                const bounds = L.latLngBounds(polygonPoints);
+
+                // Create a rectangle layer using these bounds
+                const boundingBox = L.rectangle(bounds, {
+                    color: '#f88',   // Blue color for the bounding box
+                    weight: 2
+                });
+
+                boundingBox.bindPopup(`<b>${siteData.name}</b><br>${siteData.description || ''}`);
+                boundingBox.addTo(featureGroup);
+            } else if (polygonPoints.length > 0) {
+                // Create a marker for the point(s)
+                polygonPoints.forEach(pt => {
+                    const marker = L.marker(polygonPoints[0], {icon: createIcon('#f00')});
+                    marker.bindPopup(`<b>${siteData.name}</b><br>${siteData.description || ''}`);
+                    marker.addTo(featureGroup);
+                });
+            }
+
+            // Add a marker to each vertex in the polygon
+            siteData.points.forEach(pt => {
+                const marker = L.marker([pt.lat, pt.lng], {
+                    icon: createIcon('#f00')
+                });
+                marker.addTo(featureGroup);
+            });
+        });
+
+        // Add the featureGroup to the map then draw it
+        featureGroup.addTo(map);
+        if (featureGroup.getLayers().length > 0) {
+            // Fit the map to the bounds of the polygon but zoom out to see the context
+            const bounds = featureGroup.getBounds();
+            const sw = bounds.getSouthWest();
+            const ne = bounds.getNorthEast();
+            const offset = 0.1;
+            map.fitBounds([[sw.lat - offset, sw.lng - offset], [ne.lat + offset, ne.lng + offset]], { maxZoom: 11 });
+        }
+    }
+
+    function createIcon(color) {
+        return L.divIcon({
+            html: `<div style="
+                    width: 12px;
+                    height: 12px;
+                    background: ${color};
+                    transform: rotate(45deg);
+                    border: 1px solid #fff;
+                    box-shadow: 0 0 2px rgba(0,0,0,0.5);
+                "></div>`,
+            className: 'diamond-marker',
+            iconSize: [12, 12],
+            iconAnchor: [6, 6],  // Center the icon
+            popupAnchor: [0, -6]  // Position popup above the marker
+        });
+    }
 </script>
 {% endblock %}

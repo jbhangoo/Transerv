@@ -1,11 +1,15 @@
+"""
+Module Name: projectsites
+Description: This module contains routes related to projects and sites.
+"""
 import json
+from sqlalchemy.exc import IntegrityError
+
 from flask import Blueprint, jsonify, render_template, request
 from flask_login import login_required, current_user
 
 from handlers.decorators import role_required, UserRole
 from models.data import db, Project, Site, ProjectSite, Geography
-from forms.site_form import SiteForm
-from util.form import form_submit_error_response
 
 projectsite_bp = Blueprint('projectsites', __name__, url_prefix='/projectsites')
 
@@ -14,6 +18,11 @@ projectsite_bp = Blueprint('projectsites', __name__, url_prefix='/projectsites')
 @login_required
 @role_required(UserRole.ADMIN)
 def projectsite_index():
+    """
+    Function Name: projectsite_index
+    Description: Displays the projectsites index page.
+    :return:
+    """
     projects = Project.query.all()
     sites = Site.query.all()
     return render_template('project/projectsites.html',
@@ -24,7 +33,12 @@ def projectsite_index():
 @login_required
 @role_required(UserRole.ADMIN)
 def projectsite_list():
-    # Logic to retrieve all species projects
+    """
+    Function Name: projectsite_list
+    Description: Displays all project sites
+    :return:
+    """
+
     projectsites = ProjectSite.query.join(Project).join(Site).with_entities(
         ProjectSite.id,
         Project.name.label('project'),
@@ -38,6 +52,11 @@ def projectsite_list():
 @login_required
 @role_required(UserRole.ADMIN)
 def projectsite_add():
+    """
+    Function Name: projectsite_add
+    Description: Adds a new project site
+    :return:
+    """
     project_id = request.form.get('project_id')
     site_name = request.form.get('siteName')
     description = request.form.get('siteDescription')
@@ -46,15 +65,26 @@ def projectsite_add():
     points_json = request.form.get('points')
     points = json.loads(points_json) if points_json else []
 
+    if not project_id:
+        return jsonify({'message': 'Project ID is required'}), 400
     if not site_name:
         return jsonify({'message': 'Site name is required'}), 400
     new_site = Site(name=site_name, description=description)
-    db.session.add(new_site)
+    try:
+        db.session.add(new_site)
+        db.session.flush()  # Ensure new_site.id is available for use
+    except IntegrityError as e:
+        db.session.rollback()
+        return jsonify({'message': 'Site already exists'}), 400
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': str(e)}), 400
     db.session.flush()  # Ensure new_site.id is available for use
 
     # Add points to Geography table
     for point in points:
-        new_geography = Geography(site_id=new_site.id, latitude=point['lat'], longitude=point['lng'])
+        new_geography = Geography(site_id=new_site.id, geodetic_system='WGS84',
+                                 latitude=point['latitude'], longitude=point['longitude'])
         db.session.add(new_geography)
     db.session.commit()
 
@@ -71,18 +101,25 @@ def projectsite_add():
 @login_required
 @role_required(UserRole.ADMIN)
 def projectsite_edit(site_id):
+    """
+    Function Name: projectsite_edit
+    Description: Edits a site of a project
+    :param site_id:
+    :return:
+    """
     site = Site.query.get(site_id)
     site_data = {
         'id': site.id,
         'name': site.name,
         'description': site.description,
-        'points': [{'id': p.id, 'latitude': p.latitude, 'longitude': p.longitude} for p in site.points]
+        'points': [{'id': p.id, 'latitude': p.latitude, 'longitude': p.longitude}
+                   for p in site.points]
     }
     if request.method == 'GET':
         return render_template('project/projectsite_edit.html',
                                site=site_data,
                                current_user=current_user)
-    elif request.method == 'POST':
+    if request.method == 'POST':
         formdata = request.get_json()
         if ('name' in formdata) and (site.name != formdata['name']):
             site.name = formdata['name']
@@ -121,7 +158,12 @@ def projectsite_edit(site_id):
 @login_required
 @role_required(UserRole.ADMIN)
 def projectsite_delete(psid):
-    # Logic to find project by id and delete it
+    """
+    Function Name: projectsite_delete
+    Description: Deletes a project site
+    :param psid:
+    :return:
+    """
     projectsite = ProjectSite.query.get(psid)
     db.session.delete(projectsite)
     db.session.commit()

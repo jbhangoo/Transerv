@@ -57,7 +57,11 @@ login_manager.login_message = 'Please log in first.'
 
 @login_manager.user_loader
 def load_user(user_id):
-    # since the user_id is stored in the session, we can use it to load the user details
+    """
+    Callback to reload the user object from the user ID stored in the session
+    :param user_id:
+    :return:
+    """
     return User.query.get(int(user_id))
 
 # Register request processors

@@ -3,7 +3,7 @@ Module Name: entry
 Description: This module contains routes related to survey entries.
 """
 
-from flask import Blueprint, render_template, redirect, request, jsonify, url_for, flash
+from flask import Blueprint, render_template, redirect, request, jsonify, url_for, flash, current_app
 from flask_login import login_required, current_user
 
 from handlers.decorators import role_required
@@ -22,8 +22,10 @@ def survey_list():
     Function Name: survey_list
     Description: Lists all surveys.
     """
-    all_surveys = Survey.query.order_by('project_id', 'name', 'survey_date', 'time_start').join(Site)\
-               .with_entities(Survey.id, Site.name, Survey.survey_date,
+    all_surveys = Survey.query\
+                .order_by('project_id', 'name', 'survey_date', 'time_start')\
+                .join(Site)\
+                .with_entities(Survey.id, Site.name, Survey.survey_date,
                               Survey.time_start, Survey.time_end,
                               Survey.observer_count, Survey.comments).all()
     print("survey_list", all_surveys)
@@ -48,11 +50,14 @@ def survey_add():
     """
     project = request.form.get('project')
     project = int(project)
-    site = request.form.get('site')
+    pr_site_id = request.form.get('site')
+    prsite = ProjectSite.query.get(pr_site_id)
+    site = prsite.site_id
+
     if (not site) or (site == '0'):
         return jsonify({'message': 'Site is required'}), 400
-    else:
-        site = int(site)
+
+    site = int(site)
 
     survey_date = request.form.get('survey_date')
     if not survey_date:
@@ -61,19 +66,21 @@ def survey_add():
     time_start = request.form.get('time_start')
     time_end = request.form.get('time_end')
     if time_end <= time_start:
-        return jsonify({'message': f'Start time ({time_start}) must be before end time ({time_end})'}), 400
+        return jsonify({'message':
+                        f'Start time ({time_start}) must be before end time ({time_end})'}), 400
     observer_count = request.form.get('observer_count')
     if not observer_count:
         observer_count = 0
     else:
         observer_count = int(observer_count)
     comments = request.form.get('comments')
-    print("Creating new survey...")
-    print(f"Adding SURVEY: User {current_user.id}, Project {project}, Site {site}, {survey_date}, {time_start}, {time_end}, nobs={observer_count}, comments= '{comments}'")
-    new_survey = Survey(user_id=current_user.id, project_id=project, site_id=site, survey_date=survey_date,
-                         time_start=time_start, time_end=time_end,
-                         observer_count=observer_count, comments=comments)
-    print(new_survey)
+    current_app.logger.info(f"Adding SURVEY: User {current_user.id}, Project {project}, "
+          f"Site {site}, {survey_date}, {time_start}, {time_end}, "
+          f"nobs={observer_count}, comments= '{comments}'")
+    new_survey = Survey(user_id=current_user.id, project_id=project,
+                        site_id=site, survey_date=survey_date,
+                        time_start=time_start, time_end=time_end,
+                        observer_count=observer_count, comments=comments)
     db.session.add(new_survey)
     db.session.commit()
     return jsonify({'message': f'Survey "{survey_date}" added'}), 201
@@ -82,6 +89,10 @@ def survey_add():
 @login_required
 @role_required(UserRole.MEMBER)
 def surveys():
+    """
+    Function Name: surveys
+    Description: Allows the user to manage surveys.
+    """
     projects = Project.query.order_by('name')
     return render_template('entry/surveys.html', projects=projects)
 
@@ -97,15 +108,6 @@ def survey_edit(survey_id):
     project = Project.query.get(survey.project_id)
 
     form = SurveyForm()
-    """form.project.choices = [(proj.id, proj.name) for proj in Project.query.order_by('name')]
-    form.project.choices.insert(0, (0, 'Choose project'))
-    form.project.data = survey.project_id
-    form.site.choices = [(site.id, site.name) for site in
-                         ProjectSite.query.filter_by(project_id=project.id or 0)
-                         .join(Site).with_entities(Site.id, Site.name)
-                         .all()]
-    form.site.choices.insert(0, (0, 'Choose site'))
-    form.site.data = survey.site_id"""
 
     newform = SurveyForm(data=form.data)
     newform.project.choices = [(proj.id, proj.name) for proj in Project.query.order_by('name')]
@@ -168,6 +170,12 @@ def survey_edit(survey_id):
 @login_required
 @role_required(UserRole.MEMBER)
 def observation_add(survey_id):
+    """
+    Function Name: observation_add
+    Description: Add a new observation to a survey.
+    :param survey_id:   Survey to add observation to
+    :return:
+    """
     project_id = Survey.query.get(survey_id).project_id
     species_id = Project.query.get(project_id).species_id
 
@@ -189,11 +197,9 @@ def observation_add(survey_id):
     if error_response:
         return error_response
 
-    # Validate end_date > start_date
-    if (((not form.count.data) and (not form.count_supplemental.data))
-            or (form.count.data < 0)
-            or (form.count_supplemental.data < 0)):
-        flash("Some postive count must be entered", "error")
+    # Validate there is a count
+    if (form.count.data is None or form.count.data <= 0) and (form.count_supplemental.data is None or form.count_supplemental.data <= 0):
+        flash("Either count or count supplemental must be entered and positive", "error")
         return render_template('entry/observation_add.html',
                                form=form, survey_id=survey_id, observations=results)
 
@@ -217,6 +223,12 @@ def observation_add(survey_id):
 @login_required
 @role_required(UserRole.MEMBER)
 def observation_edit(observation_id):
+    """
+    Function Name: observation_edit
+    Description: Allows the user to edit the observation
+    :param observation_id: Observation to edit
+    :return:
+    """
     form = ObservationForm()
     results = db.session.query(Observation)\
                .filter(Observation.id == observation_id)\
@@ -276,6 +288,13 @@ def observation_edit(observation_id):
 @login_required
 @role_required(UserRole.MEMBER)
 def observation_delete(observation_id, survey_id):
+    """
+    Function Name: observation_delete
+    Description: Allows the user to delete the observation
+    :param observation_id:  Observation to be deleted
+    :param survey_id:       Needed to setup next page after deletion is done
+    :return:
+    """
     results = (db.session.query(Observation)
                .filter(Observation.id == observation_id)
                .join(Species).all())

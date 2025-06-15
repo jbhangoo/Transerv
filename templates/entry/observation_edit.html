@@ -16,37 +16,37 @@
         <form method="POST" class="row g-3" >
             {{ form.hidden_tag() }}
             <div class="row">
-            <div class="col-md-4">
-                {{ form.species_id.label(class="form-label") }}
-                {{ form.species_id(class="form-control", id="species") }}
-                {{ form.count.label(class="form-label") }}
-                {{ form.count(class="form-control text" + (" is-invalid" if form.count.errors else "")) }}
-                {% for error in form.count.errors %}
-                    <div class="invalid-feedback">{{ error }}</div>
-                {% endfor %}
-                {{ form.count_supplemental.label(class="form-label") }}
-                {{ form.count_supplemental(class="form-control text" + (" is-invalid" if form.count_supplemental.errors else "")) }}
-                {% for error in form.count_supplemental.errors %}
-                    <div class="invalid-feedback">{{ error }}</div>
-                {% endfor %}
-            </div>
-            <div class="col-md-4">
-                {{ form.direction.label(class="form-label") }}
-                {{ form.direction(class="form-control", id="direction") }}
-                {{ form.behavior.label(class="form-label") }}
-                {{ form.behavior(class="form-control", id="behavior") }}
-                {{ form.comments.label(class="form-label") }}
-                {{ form.comments(class="form-control textarea" + (" is-invalid" if form.comments.errors else ""), id="comments", style="height:50px;") }}
-                {% for error in form.comments.errors %}
-                    <div class="invalid-feedback">{{ error }}</div>
-                {% endfor %}
-            </div>
-            <div class="col-md-4">
-                {{ form.latitude.label(class="form-label") }}
-                {{ form.latitude(class="form-control text" + (" is-invalid" if form.latitude.errors else "")) }}
-                {{ form.longitude.label(class="form-label") }}
-                {{ form.longitude(class="form-control text" + (" is-invalid" if form.longitude.errors else "")) }}
-            </div>
+                <div class="col-md-4">
+                    {{ form.species_id.label(class="form-label") }}
+                    {{ form.species_id(class="form-control", id="species") }}
+                    {{ form.count.label(class="form-label") }}
+                    {{ form.count(class="form-control text" + (" is-invalid" if form.count.errors else "")) }}
+                    {% for error in form.count.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                    {{ form.count_supplemental.label(class="form-label") }}
+                    {{ form.count_supplemental(class="form-control text" + (" is-invalid" if form.count_supplemental.errors else "")) }}
+                    {% for error in form.count_supplemental.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="col-md-4">
+                    {{ form.direction.label(class="form-label") }}
+                    {{ form.direction(class="form-control", id="direction") }}
+                    {{ form.behavior.label(class="form-label") }}
+                    {{ form.behavior(class="form-control", id="behavior") }}
+                    {{ form.comments.label(class="form-label") }}
+                    {{ form.comments(class="form-control textarea" + (" is-invalid" if form.comments.errors else ""), id="comments", style="height:50px;") }}
+                    {% for error in form.comments.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="col-md-4">
+                    {{ form.latitude.label(class="form-label") }}
+                    {{ form.latitude(class="form-control text" + (" is-invalid" if form.latitude.errors else "")) }}
+                    {{ form.longitude.label(class="form-label") }}
+                    {{ form.longitude(class="form-control text" + (" is-invalid" if form.longitude.errors else "")) }}
+                </div>
             </div>
             <div class="row">
                 <div class="col-md-4">

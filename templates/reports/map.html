@@ -120,65 +120,65 @@
         });
     });
 
-const displayProjectLayer = (name, data) => {
-    // Clear existing layers
-    Object.keys(layerGroups).forEach((layerName) => {
-        map.removeLayer(layerGroups[layerName]);
-    });
-
-    // Add new layer for this project. FeatureGroup needed to calculate bounds.
-    const featureGroup = L.featureGroup();
-    layerGroups[name] = featureGroup;
-
-    // Create a polygon for each site
-    data.forEach((siteData) => {
-        const polygonPoints = siteData.points.map(pt => [pt.lat, pt.lng]);
-
-        if (polygonPoints.length > 0) {
-            // Create a LatLngBounds object from the points
-            const bounds = L.latLngBounds(polygonPoints);
-
-            // Create a rectangle layer using these bounds
-            const boundingBox = L.rectangle(bounds, {
-                color: '#f88',   // Blue color for the bounding box
-                weight: 2
-            });
-
-            boundingBox.bindPopup(`<b>${siteData.name}</b><br>${siteData.description || ''}`);
-            boundingBox.addTo(featureGroup);
-        }
-
-        // Add a marker to each vertex in the polygon
-        siteData.points.forEach(pt => {
-            const marker = L.marker([pt.lat, pt.lng], {
-                icon: createIcon('#f00')
-            });
-            marker.addTo(featureGroup);
+    const displayProjectLayer = (name, data) => {
+        // Clear existing layers
+        Object.keys(layerGroups).forEach((layerName) => {
+            map.removeLayer(layerGroups[layerName]);
         });
-    });
 
-    // Add the featureGroup to the map then draw it
-    featureGroup.addTo(map);
-    if (featureGroup.getLayers().length > 0) {
-        map.fitBounds(featureGroup.getBounds());  // Optional: Zoom to show all features
+        // Add new layer for this project. FeatureGroup needed to calculate bounds.
+        const featureGroup = L.featureGroup();
+        layerGroups[name] = featureGroup;
+
+        // Create a polygon for each site
+        data.forEach((siteData) => {
+            const polygonPoints = siteData.points.map(pt => [pt.lat, pt.lng]);
+
+            if (polygonPoints.length > 0) {
+                // Create a LatLngBounds object from the points
+                const bounds = L.latLngBounds(polygonPoints);
+
+                // Create a rectangle layer using these bounds
+                const boundingBox = L.rectangle(bounds, {
+                    color: '#f88',   // Blue color for the bounding box
+                    weight: 2
+                });
+
+                boundingBox.bindPopup(`<b>${siteData.name}</b><br>${siteData.description || ''}`);
+                boundingBox.addTo(featureGroup);
+            }
+
+            // Add a marker to each vertex in the polygon
+            siteData.points.forEach(pt => {
+                const marker = L.marker([pt.lat, pt.lng], {
+                    icon: createIcon('#f00')
+                });
+                marker.addTo(featureGroup);
+            });
+        });
+
+        // Add the featureGroup to the map then draw it
+        featureGroup.addTo(map);
+        if (featureGroup.getLayers().length > 0) {
+            map.fitBounds(featureGroup.getBounds());  // Optional: Zoom to show all features
+        }
     }
-}
 
-function createIcon(color) {
-    return L.divIcon({
-        html: `<div style="
-                width: 12px;
-                height: 12px;
-                background: ${color};
-                transform: rotate(45deg);
-                border: 1px solid #fff;
-                box-shadow: 0 0 2px rgba(0,0,0,0.5);
-            "></div>`,
-        className: 'diamond-marker',
-        iconSize: [12, 12],
-        iconAnchor: [6, 6],  // Center the icon
-        popupAnchor: [0, -6]  // Position popup above the marker
-    });
-}
+    function createIcon(color) {
+        return L.divIcon({
+            html: `<div style="
+                    width: 12px;
+                    height: 12px;
+                    background: ${color};
+                    transform: rotate(45deg);
+                    border: 1px solid #fff;
+                    box-shadow: 0 0 2px rgba(0,0,0,0.5);
+                "></div>`,
+            className: 'diamond-marker',
+            iconSize: [12, 12],
+            iconAnchor: [6, 6],  // Center the icon
+            popupAnchor: [0, -6]  // Position popup above the marker
+        });
+    }
 </script>
 {% endblock %}
