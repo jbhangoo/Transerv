@@ -49,31 +49,18 @@
                                 </div>
                             </div>
                             <div class="row mt-3">
-                                <div class="col-md-6">
-                                    {{ form.is_active.label(class="form-check-label") }}
-                                    {% if form.is_active.errors %}
-                                    {{ form.is_active(class="form-check-input is-invalid") }}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.is_active.errors %}
-                                        {{ error }}
-                                        {% endfor %}
+                                <div class="col-md-12">
+                                    <div class="form-check form-switch">
+                                        {{ form.is_active(class="form-check-input", role="switch") }}
+                                        {{ form.is_active.label(class="form-check-label") }}
+                                        {% if form.is_active.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.is_active.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
                                     </div>
-                                    {% else %}
-                                    {{ form.is_active(class="form-check-input") }}
-                                    {% endif %}
-                                </div>
-                                <div class="col-md-6">
-                                    {{ form.status.label(class="form-label") }}
-                                    {% if form.status.errors %}
-                                    {{ form.status(class="form-control is-invalid") }}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.status.errors %}
-                                        {{ error }}
-                                        {% endfor %}
-                                    </div>
-                                    {% else %}
-                                    {{ form.status(class="form-control") }}
-                                    {% endif %}
                                 </div>
                             </div>
                             <div class="row mt-3">

@@ -44,15 +44,15 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(256), nullable=False)
     name = db.Column(db.String(100))
     email = db.Column(db.String(100))
-    status = db.Column(db.String(100))
+    is_active = db.Column(db.Boolean, default=True)
 
-    def __init__(self, username, email, password, role_id, status='active', name=None, ):
+    def __init__(self, username, email, password, role_id, is_active=True, name=None):
         self.username = username
         self.email = email
         self.set_password(password)
         self.name = name
         self.role_id = role_id if role_id > 0 else 9
-        self.status = status
+        self.is_active = is_active
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -62,6 +62,11 @@ class User(UserMixin, db.Model):
 
     def get_id(self):
         return str(self.id)
+
+    @property
+    def is_authenticated(self):
+        """Only allow True response if the user is active."""
+        return self.is_active
 
     # Optional: Implement __repr__ for easier debugging
     def __repr__(self):

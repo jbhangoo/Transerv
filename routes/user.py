@@ -60,8 +60,6 @@ def user_edit(user_id):
         user.name = form.name.data
     if form.role_id.data != user.role_id:
         user.role_id = form.role_id.data
-    if form.status.data != user.status:
-        user.status = form.status.data
     if form.is_active.data != user.is_active:
         user.is_active = form.is_active.data
     db.session.commit()
@@ -83,7 +81,6 @@ def user_delete(user_id):
         flash('Cannot delete other superusers', 'danger')
         return redirect(url_for('user.list_users'))
 
-    user.status = 'deleted'
     user.is_active = False
     db.session.commit()
     flash('User deleted successfully', 'success')

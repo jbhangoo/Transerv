@@ -29,7 +29,6 @@ class EditUserForm(FlaskForm):
     role_id = SelectField('Role', coerce=int, validators=[DataRequired()])
     name = StringField('Name')
     email = StringField('Email', validators=[Length(min=5, max=50)])
-    status = StringField('Status', default='active')
     is_active = BooleanField('Active')
     password = PasswordField('New Password', validators=[
         Length(min=8),

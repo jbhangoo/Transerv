@@ -1,6 +1,6 @@
 """
 Module Name: initialize
-Description: This module contains functions that initialize
+Description: Examples of functions that initialize
 the database with basic sample data
 
 """
@@ -59,7 +59,7 @@ def init_db_tables(app, db):
             password=default_password,
             email='donotuse@super.com',
             role_id=role_id,
-            status='active'
+            is_active=True,  # Super users are always active by default
         )
         db.session.add(user)
         db.session.commit()
