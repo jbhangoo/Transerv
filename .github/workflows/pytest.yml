@@ -20,10 +20,10 @@ jobs:
         pip install -r requirements.txt
     - name: Create database for pytest
       env:
-        FLASK_APP: Transerv
+        FLASK_APP: app:app
         FLASK_ENV: test
       run: |
-        flask init_db
+        python -m flask init_db
     - name: Run tests with pytest
       run: |
         pytest
