@@ -1,7 +1,12 @@
-# errors.py
+""" errors.py -- error handlers """
 from flask import render_template
 
 def register_error_handlers(app):
+    """
+    Executing this method registers the error handlers for the given application
+    :param app: register error handlers for this app
+    :return:
+    """
 
     @app.errorhandler(404)
     def page_not_found(error):

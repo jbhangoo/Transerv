@@ -3,7 +3,7 @@ Module Name: projectsites
 Description: This module contains routes related to projects and sites.
 """
 import json
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from flask import Blueprint, jsonify, render_template, request
 from flask_login import login_required, current_user
@@ -76,9 +76,14 @@ def projectsite_add():
     except IntegrityError as e:
         db.session.rollback()
         return jsonify({'message': 'Site already exists'}), 400
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        return jsonify({'message': 'Database error occurred'}), 500
     except Exception as e:
+        log_error(e)
         db.session.rollback()
         return jsonify({'message': str(e)}), 400
+
     db.session.flush()  # Ensure new_site.id is available for use
 
     # Add points to Geography table

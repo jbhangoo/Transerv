@@ -55,9 +55,11 @@ class User(UserMixin, db.Model):
         self.is_active = is_active
 
     def set_password(self, password):
+        """ Create hashed password. """
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
+        """ Compare given password to hashed user entry. """
         return check_password_hash(self.password_hash, password)
 
     def get_id(self):
@@ -144,7 +146,8 @@ class Survey(db.Model):
     observations = db.relationship('Observation', backref='survey')
     created_at = db.Column(db.DateTime, default=datetime.datetime.now(datetime.UTC))
 
-    def __init__(self, user_id:int, project_id:int, site_id:int, survey_date:str, time_start, time_end, observer_count, comments):
+    def __init__(self, user_id:int, project_id:int, site_id:int,
+                 survey_date:str, time_start, time_end, observer_count, comments):
         self.user_id = user_id
         self.project_id = project_id
         self.site_id = site_id
@@ -157,7 +160,9 @@ class Survey(db.Model):
         self.observer_count = observer_count
         self.comments = comments
     def __repr__(self):
-        return f'Survey <Project {self.project_id}, Site {self.site_id}, Date {self.survey_date}, User {self.user_id}, observer count {self.observer_count}>'
+        return (f'Survey <Project {self.project_id}, Site {self.site_id}, '
+                f'Date {self.survey_date}, User {self.user_id}, '
+                f'observer count {self.observer_count}>')
 
 class Observation(db.Model):
     """
@@ -219,21 +224,32 @@ class Geography(db.Model):
     def __init__(self, site_id, geodetic_system:str, latitude:float|None, longitude:float|None,
                  northing:float|None=None, easting:float|None=None, zone=None, band=None,
                  status:bool=True, comments=None):
+        """
+
+        :param site_id:             Site this point is for
+        :param geodetic_system:     Typically UTM NAD83 or WGS84
+        :param latitude:
+        :param longitude:
+        :param northing:            UTM northing
+        :param easting:             UTM easting
+        :param zone:                UTM vertical zone
+        :param band:                UTM horizontal band
+        :param status:              True=active, False=no longer in use
+        :param comments:
+        """
 
         if (latitude and longitude) or (northing and easting):
-            self.init_geo(site_id, band, comments, easting, geodetic_system, latitude, longitude, northing, status, zone)
+            self.site_id = site_id
+            self.geodetic_system = geodetic_system
+            self.latitude = latitude
+            self.longitude = longitude
+            self.northing = northing
+            self.easting = easting
+            self.zone = zone
+            self.band = band
+            self.status = status
+            self.comments = comments
 
-    def init_geo(self, sid, band, comments, easting, geodetic_system, latitude, longitude, northing, status, zone):
-        self.site_id = sid
-        self.geodetic_system = geodetic_system
-        self.latitude = latitude
-        self.longitude = longitude
-        self.northing = northing
-        self.easting = easting
-        self.zone = zone
-        self.band = band
-        self.status = status
-        self.comments = comments
 
     def __repr__(self):
         return (f'<Site {self.site_id} '

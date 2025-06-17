@@ -1,15 +1,13 @@
 """
 Module Name: initialize
-Description: Examples of functions that initialize
-the database with basic sample data
-
+Description: Functions that initialize the database and load with basic sample data
 """
 import os
-
+from sqlalchemy.exc import IntegrityError, OperationalError
 from models.data import User, Role, UserRole, Site, Geography, Species, Project, ProjectSite
 
-# Sample files if you just content to test the database
-
+# Simple example data if you just want to test the app with basic actions
+# Assumes the database is empty. Replace with your own data if needed
 sample_sites = [
     {'name': 'Land1', 'description': 'On land'},
     {'name': 'Lake2', 'description': 'In Water'},
@@ -43,9 +41,11 @@ sample_species = [
     {'code': 'MOOSE', 'common_name': 'Moose', 'scientific_name': 'Alces Alces'},
     {'code': 'REDFOX', 'common_name': 'Red Fox', 'scientific_name': 'Vulpes Vulpes'},
 ]
+### End of Sample Data ###
+
 def init_db_tables(app, db):
     """
-
+    Set up the database
     :param app:
     :param db:
     :return:
@@ -78,7 +78,7 @@ def init_db_tables(app, db):
 
 def load_sites(app, db):
     """
-
+    Load basic set of sample data into a new database
     :param app:
     :param db:
     :return:
@@ -101,7 +101,7 @@ def load_sites(app, db):
                         latitude=data['lat'], longitude=data['lng'], northing=None, easting=None)
         geos_to_add.append(geo)
 
-    print(f'Add projects to sites...')
+    print('Add projects to sites...')
     proj_sites_to_add = []
     for data in sample_projectsites:
         ps = ProjectSite(project_id=data['project_id'], site_id=data['site_id'])
@@ -118,7 +118,7 @@ def load_sites(app, db):
             db.session.add_all(proj_sites_to_add)
             db.session.commit()
             print('Project sites loaded successfully.')
-        except Exception as e:
+        except (IntegrityError, OperationalError) as e:
             db.session.rollback()
             print(f'Error loading files: {str(e)}')
 
@@ -145,7 +145,7 @@ def load_species(app, db):
             db.session.add_all(species_to_add)
             db.session.commit()
             print('Species files loaded successfully.')
-        except Exception as e:
+        except (IntegrityError, OperationalError) as e:
             db.session.rollback()
             print(f'Error loading files: {e}')
 
@@ -172,6 +172,6 @@ def load_projects(app, db):
             db.session.add_all(projects_to_add)
             db.session.commit()
             print('projects files loaded successfully.')
-        except Exception as e:
+        except (IntegrityError, OperationalError) as e:
             db.session.rollback()
             print(f'Error loading files: {str(e)}')

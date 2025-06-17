@@ -2,8 +2,6 @@
 Module Name: reports
 Description: This module contains routes that generate reports
 """
-import json
-
 from flask import Blueprint, render_template, request, flash
 from forms.project_form import ProjectReportForm
 
@@ -70,33 +68,34 @@ def project_report():
         observations = db.session.execute(obs_stmt).all()
 
         # Process observations for the chart
-        chart_data = {}
+        species_data = {}
         for obs in observations:
             common_name = obs[1]  # common_name is at index 1
             survey_date = obs[0]  # survey_date is at index 0
             count = obs[5] or 0   # count is at index 6
             count_supp = obs[6] or 0  # count_supplemental is at index 7
             total = count + count_supp
-            
-            if common_name not in chart_data:
-                chart_data[common_name] = {
+
+            if common_name not in species_data:
+                species_data[common_name] = {
                     'x': [],  # dates
                     'y': [],  # counts
                     'text': []  # hover text
                 }
-            
-            chart_data[common_name]['x'].append(survey_date.isoformat())
-            chart_data[common_name]['y'].append(total)
-            chart_data[common_name]['text'].append(f"Date: {survey_date.strftime('%Y-%m-%d')}<br>Count: {count}" + 
-                                                 (f"<br>Supplemental: {count_supp}" if count_supp > 0 else ""))
+
+            species_data[common_name]['x'].append(survey_date.isoformat())
+            species_data[common_name]['y'].append(total)
+            species_data[common_name]['text'].append(
+                f"Date: {survey_date.strftime('%Y-%m-%d')}<br>Count: {count}" +
+                (f"<br>Supplemental: {count_supp}" if count_supp > 0 else ""))
     else:
         project_id = None
         observations = []
-        chart_data = {}
+        species_data = {}
 
     # Convert chart data to list of traces for Plotly
     traces = []
-    for species, data in chart_data.items():
+    for species, data in species_data.items():
         traces.append({
             'x': data['x'],
             'y': data['y'],

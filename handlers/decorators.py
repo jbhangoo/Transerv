@@ -1,11 +1,15 @@
+"""
+decorators.py
+Define decorators for use by Flask routes.
+"""
 from functools import wraps
 from flask import abort
 from flask_login import current_user
 from models.data import db, UserRole, Role
 
-# Security Features
-# Role-based access control middleware
+# Security middleware
 def role_required(required_level:UserRole):
+    """ Role-based access control  """
     def wrapper(fn):
         @wraps(fn)
         def decorated_view(*args, **kwargs):

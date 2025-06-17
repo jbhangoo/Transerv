@@ -1,3 +1,4 @@
+""" survey_form.py """
 from flask_wtf import FlaskForm
 from wtforms import SelectField, DateField, TimeField, IntegerField, TextAreaField, SubmitField
 from wtforms.validators import DataRequired

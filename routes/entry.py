@@ -3,7 +3,8 @@ Module Name: entry
 Description: This module contains routes related to survey entries.
 """
 
-from flask import Blueprint, render_template, redirect, request, jsonify, url_for, flash, current_app
+from flask import Blueprint, render_template, redirect, request, jsonify, url_for, flash
+from flask import current_app
 from flask_login import login_required, current_user
 
 from handlers.decorators import role_required
@@ -198,8 +199,10 @@ def observation_add(survey_id):
         return error_response
 
     # Validate there is a count
-    if (form.count.data is None or form.count.data <= 0) and (form.count_supplemental.data is None or form.count_supplemental.data <= 0):
-        flash("Either count or count supplemental must be entered and positive", "error")
+    if ((form.count.data is None or form.count.data <= 0)
+            and (form.count_supplemental.data is None
+                 or form.count_supplemental.data <= 0)):
+        flash("Either count or count supplemental must be a positive value", "error")
         return render_template('entry/observation_add.html',
                                form=form, survey_id=survey_id, observations=results)
 
