@@ -6,7 +6,7 @@ the database with basic sample data
 """
 import os
 
-from models.data import User, Role, UserRole, Site, Geography, Species, Project
+from models.data import User, Role, UserRole, Site, Geography, Species, Project, ProjectSite
 
 # Sample files if you just content to test the database
 
@@ -21,9 +21,20 @@ sample_sites = [
 sample_coords = [
     {'site_id': 1, 'lat': 45.030841, 'lng': -74.674427},
     {'site_id': 1, 'lat': 45.019838, 'lng': -74.802194},
-    {'site_id': 2, 'lat': 44.983328, 'lng': -74.629196},
     {'site_id': 1, 'lat': 45.014422, 'lng': -74.645509},
-    {'site_id': '2', 'lat': 45.033821, 'lng': -74.577799}
+    {'site_id': 2, 'lat': 44.983328, 'lng': -74.629196},
+    {'site_id': 2, 'lat': 45.033821, 'lng': -74.577799},
+    {'site_id': 3, 'lat': 42.983328, 'lng': -76.629196},
+    {'site_id': 3, 'lat': 42.135881, 'lng': -76.577799},
+    {'site_id': 3, 'lat': 42.033821, 'lng': -76.577799}
+]
+
+sample_projectsites = [
+    {'project_id': 1, 'site_id': 1},
+    {'project_id': 1, 'site_id': 2},
+    {'project_id': 2, 'site_id': 3},
+    {'project_id': 1, 'site_id': 4},
+    {'project_id': 2, 'site_id': 5},
 ]
 
 sample_species = [
@@ -59,7 +70,7 @@ def init_db_tables(app, db):
             password=default_password,
             email='donotuse@super.com',
             role_id=role_id,
-            is_active=True,  # Super users are always active by default
+            is_active=True,
         )
         db.session.add(user)
         db.session.commit()
@@ -72,22 +83,30 @@ def load_sites(app, db):
     :param db:
     :return:
     """
-    sites_to_add = []
-    geos_to_add = []
     if Site.query.first():
         print('Database already contains sites. Skipping.')
         return
 
     print(f'Loading {len(sample_sites)} sites...')
+    sites_to_add = []
     for data in sample_sites:
         site = Site(name=data['name'], description=data['description'])
         sites_to_add.append(site)
 
+    print('Add points to sites...')
+    geos_to_add = []
     for data in sample_coords:
         # site_name, geodetic_system, latitude:float, longitude:float, northing:float, easting:
         geo = Geography(site_id=data['site_id'], geodetic_system='WGS84',
                         latitude=data['lat'], longitude=data['lng'], northing=None, easting=None)
         geos_to_add.append(geo)
+
+    print(f'Add projects to sites...')
+    proj_sites_to_add = []
+    for data in sample_projectsites:
+        ps = ProjectSite(project_id=data['project_id'], site_id=data['site_id'])
+        proj_sites_to_add.append(ps)
+
     with app.app_context():
         try:
             db.session.add_all(sites_to_add)
@@ -96,6 +115,9 @@ def load_sites(app, db):
             db.session.add_all(geos_to_add)
             db.session.commit()
             print('Coords loaded successfully.')
+            db.session.add_all(proj_sites_to_add)
+            db.session.commit()
+            print('Project sites loaded successfully.')
         except Exception as e:
             db.session.rollback()
             print(f'Error loading files: {str(e)}')
