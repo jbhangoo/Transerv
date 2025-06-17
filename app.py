@@ -34,7 +34,14 @@ from models.data import db, User
 app = Flask(__name__, template_folder='templates', static_folder='static')
 csrf = CSRFProtect(app)         # Enables CSRF protection for all views
 app.config.from_object(Config)  # Read config from .env
-db.init_app(app)                # Initialize flask_sqlalchemy
+
+# Initialize SQLAlchemy with engine options
+db.init_app(app)
+
+# Apply engine options from config
+with app.app_context():
+    # This ensures the engine options are used when the engine is created
+    db.engine.dispose()  # Close any existing connections to apply new settings
 
 # Set up logging
 if not app.debug:  # Only set up logging if not in debug mode
