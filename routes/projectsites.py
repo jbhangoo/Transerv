@@ -73,14 +73,13 @@ def projectsite_add():
     try:
         db.session.add(new_site)
         db.session.flush()  # Ensure new_site.id is available for use
-    except IntegrityError as e:
+    except IntegrityError:
         db.session.rollback()
-        return jsonify({'message': 'Site already exists'}), 400
+        return jsonify({'message': 'Database error: Does Site already exist?'}), 400
     except SQLAlchemyError as e:
         db.session.rollback()
-        return jsonify({'message': 'Database error occurred'}), 500
+        return jsonify({'message': 'Database error occurred: ' + str(e)}), 500
     except Exception as e:
-        log_error(e)
         db.session.rollback()
         return jsonify({'message': str(e)}), 400
 

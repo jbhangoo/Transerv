@@ -59,7 +59,7 @@ def export_report(sql, fmt):
 @ajax_bp.route('/get_weather/<int:site_id>')
 def get_weather(site_id:int):
     """
-    Get weather
+    Get weather. See open-meteo.com for details. Example output format at end of this file.
     :param site_id:
     :return:
     """
@@ -83,7 +83,78 @@ def get_weather(site_id:int):
     else:
         print("Failed to retrieve JSON files from open-meteo.com")
 
-    sample_output = """{
+def get_json_from_url(url):
+    """
+    Sends a GET request to the specified URL and converts the JSON response
+    into a Python object (usually a dictionary or a list).  Handles common
+    errors and returns None on failure.
+
+    Args:
+        url (str): The URL to send the GET request to.
+
+    Returns:
+        object:  A Python object representing the JSON files, or None if
+                 the request or JSON decoding fails.
+    """
+    response = {'text':''}
+    try:
+        # Send a GET request to the URL.  We use a timeout to prevent
+        # the program from hanging indefinitely on a slow or unresponsive server.
+        response = requests.get(url, timeout=10)  # Timeout after 10 seconds
+
+        # Raise an exception for bad status codes (4xx or 5xx).
+        response.raise_for_status()
+
+        # Parse the JSON response.  This will raise a json.JSONDecodeError
+        # if the response is not valid JSON.
+        json_data = response.json()
+        return json_data
+
+    except requests.exceptions.Timeout:
+        return {"error": f"Request to {url} took too long to respond."}
+    except requests.exceptions.TooManyRedirects:
+        return {"error": f"Too many redirects. '{url}' might be misconfigured."}
+    except requests.exceptions.RequestException as e:
+        # Handle network errors (e.g., connection refused, timeout, invalid URL).
+        # Handle network-related errors
+        error_type = type(e).__name__
+        return {"error": f"Network Error ({error_type})  with '{url}': {str(e)}"}
+
+    except json.JSONDecodeError as e:
+        # Handle errors in the JSON decoding process.  This usually means the
+        # server returned a response that was not valid JSON.
+        return {"error": f"Error decoding JSON response from {url}: {str(e)}"}
+
+    except (ValueError, TypeError) as e:
+        return {"error": f"Unexpected format. Error: {str(e)}"}
+    except (KeyError, IndexError) as e:
+        return {"error": f"Missing data. Error: {str(e)}"}
+    except AttributeError as e:
+        return {"error": f"Invalid operation. Maybe bad data. Error: {str(e)}"}
+    except Exception as e:
+        # Catch-all for any other unexpected exceptions
+        error_type = type(e).__name__
+        return {"error": f"Unexpected error ({error_type}) from {url}: {str(e)}"}
+
+
+def url_get(url:str, expected_result:bool):
+    """
+    Useful for testing get_json_from_url with a URL
+    :param url:                 GET json from this url
+    :param expected_result:     Is this expected to succeed? For error testing
+    :return:
+    """
+    data = get_json_from_url(url)
+    if data:
+        print(f"Successfully retrieved JSON files "
+              f"({ 'expected' if expected_result else 'unexpected'}):")
+        print(json.dumps(data, indent=2))  # Use json.dumps for pretty printing
+    else:
+        print(f"Failed to retrieve JSON files from {url}")
+
+"""
+Example output of weather data
+{
   "latitude": 33.427063,
   "longitude": -112.02719,
   "generationtime_ms": 0.17249584197998,
@@ -131,61 +202,5 @@ def get_weather(site_id:int):
     "wind_direction_10m": [246, 293, 313, 23, 36, 13, 25, 90, 156, 115, 109, 101, 109, 95, 117,
      101, 104, 111, 124, 135, 153, 166, 169, 304]
   }
-} """
-
-def get_json_from_url(url):
-    """
-    Sends a GET request to the specified URL and converts the JSON response
-    into a Python object (usually a dictionary or a list).  Handles common
-    errors and returns None on failure.
-
-    Args:
-        url (str): The URL to send the GET request to.
-
-    Returns:
-        object:  A Python object representing the JSON files, or None if
-                 the request or JSON decoding fails.
-    """
-    response = {'text':''}
-    try:
-        # Send a GET request to the URL.  We use a timeout to prevent
-        # the program from hanging indefinitely on a slow or unresponsive server.
-        response = requests.get(url, timeout=10)  # Timeout after 10 seconds
-
-        # Raise an exception for bad status codes (4xx or 5xx).
-        response.raise_for_status()
-
-        # Parse the JSON response.  This will raise a json.JSONDecodeError
-        # if the response is not valid JSON.
-        json_data = response.json()
-        return json_data
-
-    except requests.exceptions.RequestException as e:
-        # Handle network errors (e.g., connection refused, timeout, invalid URL).
-        return {"error": f"Error making request to {url}: {str(e)}"}
-
-    except json.JSONDecodeError as e:
-        # Handle errors in the JSON decoding process.  This usually means the
-        # server returned a response that was not valid JSON.
-        return {"error": f"Error decoding JSON response from {url}: {str(e)}"}
-
-    except Exception as e:
-        # Handle any other unexpected exceptions.  This is a catch-all for
-        # errors we didn't specifically anticipate.
-        return {"error": f"An unexpected error occurred: {str(e)}"}
-
-
-def url_get(url:str, expected_result:bool):
-    """
-    Useful for testing get_json_from_url with a URL
-    :param url:                 GET json from this url
-    :param expected_result:     Is this expected to succeed? For error testing
-    :return:
-    """
-    data = get_json_from_url(url)
-    if data:
-        print(f"Successfully retrieved JSON files "
-              f"({ 'expected' if expected_result else 'unexpected'}):")
-        print(json.dumps(data, indent=2))  # Use json.dumps for pretty printing
-    else:
-        print(f"Failed to retrieve JSON files from {url}")
+}
+"""

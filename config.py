@@ -21,7 +21,7 @@ class Config:
     SQLALCHEMY_DATABASE_URI = SQLITE_SQLALCHEMY_DATABASE_URI
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-key-here')
-    
+
     # Database connection pool settings
     SQLALCHEMY_ENGINE_OPTIONS = {
         'pool_size': 10,           # Number of connections to keep open in the pool
