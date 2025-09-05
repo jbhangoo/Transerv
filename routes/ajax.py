@@ -3,9 +3,12 @@ Module Name: ajax
 Description: This module contains AJAX routes for handling asynchronous requests.
 """
 import json
+import os
+import re
 import requests
+from vanna_ai.TRAIN_AI import MyVanna
 
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from flask_login import login_required
 from sqlalchemy.orm import joinedload
 
@@ -13,6 +16,67 @@ from handlers.decorators import role_required
 from models.data import db, Site, ProjectSite, UserRole
 
 ajax_bp = Blueprint('ajax', __name__, url_prefix='/ajax')
+
+@ajax_bp.route('/process_query', methods=['POST'])
+def process_query():
+    """
+    Process and sanitize user input text.
+    Only allows alphanumeric characters, spaces, commas, periods, and question marks.
+    """
+    data = request.get_json()
+    print(data)
+    if not data or 'input_text' not in data:
+        return jsonify({'message': 'No text provided'}), 400
+
+    # Only allow alphanumeric, spaces, commas, periods, and question marks
+    sanitized = re.sub(r'[^a-zA-Z0-9\s\,\.\?]', '', data['input_text'])
+    sanitized_input = sanitized.strip().capitalize().replace("\n", " ")
+    sql_output = generate_sql_query(sanitized_input)
+
+    return jsonify({
+        'message': 'success',
+        'original_text': data['input_text'],
+        'output': sql_output
+    }), 200
+
+def generate_sql_query(english_query):
+    """
+    Example usage:
+    user_input = "Get all users who signed up in June."
+    sql_output = generate_sql_query(user_input)
+    print("Generated SQL Query:", sql_output)
+
+    :param english_query:
+    :return:
+    """
+    # Check TRAIN_AI.py for more information about these settings
+    chroma_path = os.getenv('CHROMA_PATH')  # This will be your persistent storage directory
+    openai_api_key = os.getenv('OPENAI_API_KEY')
+
+    # Ask natural language questions
+    vn = MyVanna(config={
+        'api_key': openai_api_key,
+        'model': 'gpt-4',
+        'path': chroma_path
+    })
+    response = vn.ask(english_query)
+    return response
+
+
+@ajax_bp.route('/export')
+@login_required
+@role_required(UserRole.MEMBER)
+def export_report(sql, fmt):
+    """
+    Description: Exports a report based on the provided SQL query and format.
+    Returns a JSON response containing the exported data.
+    :param sql:
+    :param fmt:
+    :return:
+    """
+    if fmt not in ['csv', 'json']:
+        return jsonify({'error': 'Invalid format type. Use "csv" or "json"'}), 400
+    return jsonify({'files': db.engine.execute(sql).fetchall()}), 200
 
 @ajax_bp.route('/get_proj_sites/<int:project_id>')
 def get_proj_sites(project_id):
@@ -40,21 +104,6 @@ def get_proj_sites(project_id):
         })
     print("get_proj_sites",data)
     return jsonify(data)
-
-@ajax_bp.route('/export')
-@login_required
-@role_required(UserRole.MEMBER)
-def export_report(sql, fmt):
-    """
-    Description: Exports a report based on the provided SQL query and format.
-    Returns a JSON response containing the exported data.
-    :param sql:
-    :param fmt:
-    :return:
-    """
-    if fmt not in ['csv', 'json']:
-        return jsonify({'error': 'Invalid format type. Use "csv" or "json"'}), 400
-    return jsonify({'files': db.engine.execute(sql).fetchall()}), 200
 
 @ajax_bp.route('/get_weather/<int:site_id>')
 def get_weather(site_id:int):

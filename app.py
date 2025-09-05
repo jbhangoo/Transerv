@@ -15,7 +15,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 from flask import Flask, render_template
 from flask_wtf.csrf import CSRFProtect
-from flask_login import LoginManager
+from flask_login import LoginManager, login_required
 
 from handlers.processors import register_request_processors
 from handlers.errors import register_error_handlers
@@ -29,6 +29,7 @@ from routes.user import user_bp
 from routes.entry import entry_bp
 from routes.projects import project_bp
 from routes.projectsites import projectsite_bp
+from routes.query import query_bp
 from models.data import db, User
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
@@ -82,6 +83,7 @@ register_cli_commands(app)
 
 # Register Routes and Blueprints
 @app.route('/')
+@login_required
 def index():
     """ Main dashboard page for the application """
     return render_template('dashboard.html')
@@ -93,6 +95,7 @@ app.register_blueprint(entry_bp)
 app.register_blueprint(project_bp)
 app.register_blueprint(projectsite_bp)
 app.register_blueprint(user_bp)
+app.register_blueprint(query_bp)
 
 if __name__ == '__main__':
     app.run(host=os.getenv('HOST', '0.0.0.0'),
