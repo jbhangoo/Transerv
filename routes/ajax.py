@@ -56,7 +56,7 @@ def generate_sql_query(english_query):
     # Ask natural language questions
     vn = MyVanna(config={
         'api_key': openai_api_key,
-        'model': 'gpt-4',
+       # 'model': 'gpt-4',
         'path': chroma_path
     })
     response = vn.ask(english_query)
