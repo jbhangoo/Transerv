@@ -29,7 +29,6 @@ from routes.user import user_bp
 from routes.entry import entry_bp
 from routes.projects import project_bp
 from routes.projectsites import projectsite_bp
-from routes.query import query_bp
 from models.data import db, User
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
@@ -95,7 +94,6 @@ app.register_blueprint(entry_bp)
 app.register_blueprint(project_bp)
 app.register_blueprint(projectsite_bp)
 app.register_blueprint(user_bp)
-app.register_blueprint(query_bp)
 
 if __name__ == '__main__':
     app.run(host=os.getenv('HOST', '0.0.0.0'),
